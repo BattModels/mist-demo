@@ -57,7 +57,7 @@ class RoBERTa(pl.LightningModule):
         )
         self.model = RobertaForMaskedLM(config=self.config)
 
-    def setup(self):
+    def setup(self, stage):
         if not hasattr(self, "model"):
             self.model = RobertaForMaskedLM(config=self.config)
 
