@@ -1,0 +1,30 @@
+__pycache__/
+*.sif
+wandb/
+.conda/
+electrolyte-fm/
+lightning_logs/
+.venv/
+
+# Log files
+*.o*
+*.e*
+
+# Checkpoints
+*.ckpt/
+*.ckpt
+
+# NSight
+*.nsys-rep
+*.sqlite
+*.qdstrm
+
+# Dataset
+.cache/
+
+# Spack
+.spack-env/
+spack.lock
+
+# Notebook chekcpoints
+.ipynb_checkpoints/

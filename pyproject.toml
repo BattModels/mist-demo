@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "mist"
+version = "0.1.0"
+description = "Walkthrough of pre-training MIST (Molecular Insight SMILES Transformer)"
+readme = "README.md"
+authors = ["Anoushka Bhutani <abhutani@umich.edu>", "Alexius Wadell <awadell@umich.edu>"]
+
+
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "<2.0.0"
+torch = {version = "^2.3"}
+torchvision={version = "^0.18.0"}
+lightning = "^2.2"
+jsonargparse = {extras = ["signatures"], version = "^4.27"}
+transformers = "^4.40"
+wandb = "^0.16"
+typer = "^0.9"
+h5py = "^3.11"
+protobuf = "<=3.20"
+datasets = "^2.19"
+pyspark = "^3.5.0"
+rich = "^13"
+pydoe2 = "^1.3"
+smilespe = "^0.0.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8"
+pre-commit = "^3.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+addopts = "--color yes"
+
+[tool.isort]
+profile = "black"
