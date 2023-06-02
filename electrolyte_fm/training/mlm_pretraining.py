@@ -11,7 +11,7 @@ from electrolyte_fm.utils.callbacks import ThroughputMonitor
 here = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 TOKENIZER_PATH = os.path.join(
-    here, "pretrained_tokenizers/ZINC_250k_BERT_loves_chemistry/"
+    here, "pretrained_tokenizers/ZINC_250k/"
 )
 # TODO: Split test train validation
 TRAIN_DATASET_PATH = os.path.join(here, "raw_data/250k_zinc.txt")
