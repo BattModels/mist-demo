@@ -1,3 +1,4 @@
+import os
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
@@ -36,6 +37,11 @@ class RoBERTa(pl.LightningModule):
             type_vocab_size=1,
         )
         self.model = RobertaForMaskedLM(config=self.config)
+        if self.global_rank == 0:
+            self.save_hyperparameters({
+                "n_gpus_per_node": int(os.environ['SLURM_GPUS_ON_NODE']),
+                "n_nodes": int(os.environ['SLURM_NNODES'])
+            })
 
     def setup(self, stage):
         if not hasattr(self, "model"):
