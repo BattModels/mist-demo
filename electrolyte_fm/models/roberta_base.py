@@ -51,18 +51,21 @@ class RoBERTa(pl.LightningModule):
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.val_dataset, shuffle=True, collate_fn=self.data_collator, batch_size=64
+            self.val_dataset,
+            shuffle=True,
+            collate_fn=self.data_collator,
+            batch_size=64
         )
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.test_dataloader,
+            self.test_dataset,
             shuffle=True,
             collate_fn=self.data_collator,
             batch_size=64,
         )
 
-    def forward(self, batch, **kwargs):  # type: ignore[override]
+    def forward(self, batch, **kwargs):
         out = self.model(
             batch["input_ids"],
             labels=batch["input_ids"],
