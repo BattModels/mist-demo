@@ -1,3 +1,6 @@
+""" Custom callbacks for benchmarking, adapted from GenSLM
+    https://github.com/ramanathanlab/genslm/blob/71beb030df72010f5a4883a1f1a0b25bbafbe4a8/genslm/utils.py
+"""
 import time
 from statistics import mean
 from typing import Any, List
@@ -11,7 +14,7 @@ class ThroughputMonitor(Callback):
     """Custom callback in order to monitor the throughput and log to weights and biases."""
 
     def __init__(
-            self, batch_size: int, num_nodes: int = 1, wandb_active: bool = True
+        self, batch_size: int, num_nodes: int = 1, wandb_active: bool = True
     ) -> None:
         """Logs throughput statistics starting at the 2nd epoch."""
         super().__init__()
@@ -26,32 +29,30 @@ class ThroughputMonitor(Callback):
         self.macro_batch_size = batch_size * self.num_ranks
 
     def on_train_batch_start(
-            self,
-            trainer: "pl.Trainer",
-            pl_module: "pl.LightningModule",
-            batch: Any,
-            batch_idx: int,
+        self,
+        trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        batch: Any,
+        batch_idx: int,
     ) -> None:
         if pl_module.current_epoch > 0:
             self.start_time = time.time()
 
     def on_train_batch_end(
-            self,
-            trainer: "pl.Trainer",
-            pl_module: "pl.LightningModule",
-            outputs: Any,
-            batch: Any,
-            batch_idx: int,
+        self,
+        trainer: "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        outputs: Any,
+        batch: Any,
+        batch_idx: int,
     ) -> None:
         if pl_module.current_epoch > 0:
             batch_time = time.time() - self.start_time
             self.batch_times.append(batch_time)
-            pl_module.logger.log_metrics(
-                {"stats/batch_time": batch_time}
-            )
+            pl_module.logger.log_metrics({"stats/batch_time": batch_time})
 
     def on_train_epoch_end(
-            self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
+        self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
     ) -> None:
         if pl_module.current_epoch > 0:
             # compute average epoch throughput
@@ -63,13 +64,14 @@ class ThroughputMonitor(Callback):
             self.epoch_sample_times.append(avg_secs_per_sample)
             self.batch_times = []  # Reset for next epoch
             pl_module.logger.log_metrics(
-                {"stats/avg_epoch_throughput": avg_epoch_throughput,
-                 "stats/avg_secs_per_sample": avg_secs_per_sample
-                 }
+                {
+                    "stats/avg_epoch_throughput": avg_epoch_throughput,
+                    "stats/avg_secs_per_sample": avg_secs_per_sample,
+                }
             )
 
     def on_train_end(
-            self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
+        self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
     ) -> None:
         self.average_throughput = mean(self.epoch_throughputs)
         self.average_sample_time = mean(self.epoch_sample_times)

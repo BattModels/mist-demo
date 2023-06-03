@@ -1,121 +1,55 @@
 import os
-import pytorch_lightning as pl
+
 import torch
-from torch.utils.data import DataLoader
-from transformers import (
-    DataCollatorForLanguageModeling,
-    RobertaConfig,
-    RobertaForMaskedLM,
-    RobertaTokenizerFast
+from pytorch_lightning import Trainer
+from pytorch_lightning.loggers import WandbLogger
+from torch.utils.data import random_split
+from transformers import LineByLineTextDataset, RobertaTokenizerFast
+
+from electrolyte_fm.models.roberta_base import RoBERTa
+from electrolyte_fm.utils.callbacks import ThroughputMonitor
+
+here = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+
+TOKENIZER_PATH = os.path.join(here, "pretrained_tokenizers/ZINC_250k/")
+DATASET_PATH = os.path.join(here, "raw_data/250k_zinc.txt")
+MAX_EPOCHS = 4
+NUM_NODES = int(os.environ["SLURM_NNODES"])
+GPUS_PER_NODE = int(os.environ["SLURM_GPUS_ON_NODE"])
+
+tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_PATH, max_len=512)
+
+dataset = LineByLineTextDataset(
+    tokenizer=tokenizer,
+    file_path=DATASET_PATH,
+    block_size=128,
+)
+
+train_dataset, test_dataset, val_dataset = random_split(
+    dataset, lengths=[0.8, 0.1, 0.1], generator=torch.Generator().manual_seed(42)
+)
+
+model = RoBERTa(
+    train_dataset=train_dataset,
+    test_dataset=test_dataset,
+    val_dataset=val_dataset,
+    tokenizer_path=TOKENIZER_PATH,
 )
 
 
-class RoBERTa(pl.LightningModule):
-    """
-    PyTorch Lightning module for RoBERTa model MLM pre-training.
-    """
-
-    def __init__(
-        self, tokenizer_path, train_dataset, val_dataset, test_dataset
-    ) -> None:
-        super().__init__()
-
-        self.tokenizer = RobertaTokenizerFast.from_pretrained(
-            tokenizer_path, max_len=512
-        )
-        self.data_collator = DataCollatorForLanguageModeling(
-            tokenizer=self.tokenizer, mlm=True, mlm_probability=0.15
-        )
-        self.train_dataset = train_dataset
-        self.val_dataset = val_dataset
-        self.test_dataset = test_dataset
-        self.config = RobertaConfig(
-            vocab_size=52_000,
-            max_position_embeddings=514,
-            num_attention_heads=12,
-            num_hidden_layers=6,
-            type_vocab_size=1,
-        )
-        self.model = RobertaForMaskedLM(config=self.config)
-        if self.global_rank == 0:
-            self.save_hyperparameters({
-                "n_gpus_per_node": int(os.environ['SLURM_GPUS_ON_NODE']),
-                "n_nodes": int(os.environ['SLURM_NNODES'])
-            })
-
-    def setup(self, stage):
-        if not hasattr(self, "model"):
-            self.model = RobertaForMaskedLM(config=self.config)
-
-    def train_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.train_dataset,
-            shuffle=True,
-            collate_fn=self.data_collator,
-            batch_size=64,
-        )
-
-    def val_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.val_dataset,
-            shuffle=True,
-            collate_fn=self.data_collator,
-            batch_size=64
-        )
-
-    def test_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.test_dataset,
-            shuffle=True,
-            collate_fn=self.data_collator,
-            batch_size=64,
-        )
-
-    def forward(self, batch, **kwargs):
-        out = self.model(
-            batch["input_ids"],
-            labels=batch["input_ids"],
-            attention_mask=batch["attention_mask"],
-            **kwargs,
-        )
-        return out
-
-    def training_step(self, batch, batch_idx: int) -> torch.FloatTensor:
-        outputs = self(batch)
-        loss = outputs.loss
-        self.log(
-            "train/loss",
-            loss,
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-            sync_dist=True,
-        )
-        return loss
-
-    def validation_step(self, batch, batch_idx: int) -> torch.FloatTensor:
-        outputs = self(batch)
-        loss = outputs.loss
-        self.log(
-            "val/loss", loss, on_step=True, on_epoch=True, prog_bar=True, sync_dist=True
-        )
-        return loss
-
-    def test_step(self, batch, batch_idx: int) -> torch.FloatTensor:
-        outputs = self(batch)
-        loss = outputs.loss
-        self.log(
-            "test/loss",
-            loss,
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-            sync_dist=True,
-        )
-        return loss
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(
-            [p for n, p in self.model.named_parameters()], lr=1e-4
-        )
-        return optimizer
+wandb_logger = WandbLogger(
+    name=f"{torch.cuda.get_device_name()}_NN_{NUM_NODES}_GPN_{GPUS_PER_NODE}",
+    project="electrolyte-fm",
+)
+callbacks = [ThroughputMonitor(batch_size=64, num_nodes=NUM_NODES, wandb_active=True)]
+trainer = Trainer(
+    max_epochs=MAX_EPOCHS,
+    accelerator="gpu",
+    devices=list(range(GPUS_PER_NODE)),
+    num_nodes=NUM_NODES,
+    logger=wandb_logger,
+    callbacks=callbacks,
+    # limit_train_batches=10,
+    # limit_val_batches=5,
+)
+trainer.fit(model)
