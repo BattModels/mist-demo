@@ -49,7 +49,7 @@ trainer = Trainer(
     num_nodes=NUM_NODES,
     logger=wandb_logger,
     callbacks=callbacks,
-    limit_train_batches=10,
-    limit_val_batches=5,
+    # limit_train_batches=10,
+    # limit_val_batches=5,
 )
 trainer.fit(model)
