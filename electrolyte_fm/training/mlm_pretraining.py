@@ -15,7 +15,10 @@ TOKENIZER_PATH = os.path.join(here, "pretrained_tokenizers/ZINC_250k/")
 DATASET_PATH = os.path.join(here, "raw_data/250k_zinc.txt")
 MAX_EPOCHS = 4
 NUM_NODES = int(os.environ["SLURM_NNODES"])
-GPUS_PER_NODE = int(os.environ["SLURM_GPUS_ON_NODE"])
+try:
+    GPUS_PER_NODE = int(os.environ["SLURM_GPUS_ON_NODE"])
+except KeyError:
+    GPUS_PER_NODE = int(len(os.environ["SLURM_JOB_GPUS"].split(',')))
 
 tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_PATH, max_len=512)
 

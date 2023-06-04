@@ -43,10 +43,14 @@ class RoBERTa(pl.LightningModule):
             type_vocab_size=1,
         )
         self.model = RobertaForMaskedLM(config=self.config)
+        try:
+            SLURM_GPUS_ON_NODE = int(os.environ["SLURM_GPUS_ON_NODE"])
+        except KeyError:
+            SLURM_GPUS_ON_NODE = int(len(os.environ["SLURM_JOB_GPUS"].split(',')))
         if self.global_rank == 0:
             self.save_hyperparameters(
                 {
-                    "n_gpus_per_node": int(os.environ["SLURM_GPUS_ON_NODE"]),
+                    "n_gpus_per_node": SLURM_GPUS_ON_NODE,
                     "n_nodes": int(os.environ["SLURM_NNODES"]),
                 }
             )
