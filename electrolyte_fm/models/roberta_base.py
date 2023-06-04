@@ -1,11 +1,13 @@
-import os
-
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader
-from transformers import (DataCollatorForLanguageModeling,
-                          LineByLineTextDataset, RobertaConfig,
-                          RobertaForMaskedLM, RobertaTokenizerFast)
+from transformers import (
+    DataCollatorForLanguageModeling,
+    LineByLineTextDataset,
+    RobertaConfig,
+    RobertaForMaskedLM,
+    RobertaTokenizerFast,
+)
 
 
 class RoBERTa(pl.LightningModule):
@@ -43,17 +45,6 @@ class RoBERTa(pl.LightningModule):
             type_vocab_size=1,
         )
         self.model = RobertaForMaskedLM(config=self.config)
-        try:
-            SLURM_GPUS_ON_NODE = int(os.environ["SLURM_GPUS_ON_NODE"])
-        except KeyError:
-            SLURM_GPUS_ON_NODE = int(len(os.environ["SLURM_JOB_GPUS"].split(',')))
-        if self.global_rank == 0:
-            self.save_hyperparameters(
-                {
-                    "n_gpus_per_node": SLURM_GPUS_ON_NODE,
-                    "n_nodes": int(os.environ["SLURM_NNODES"]),
-                }
-            )
 
     def setup(self, stage):
         if not hasattr(self, "model"):
@@ -69,13 +60,12 @@ class RoBERTa(pl.LightningModule):
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.val_dataset, shuffle=True, collate_fn=self.data_collator, batch_size=64
+            self.val_dataset, collate_fn=self.data_collator, batch_size=64
         )
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
             self.test_dataloader,
-            shuffle=True,
             collate_fn=self.data_collator,
             batch_size=64,
         )

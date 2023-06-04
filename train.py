@@ -1,4 +1,5 @@
 import os
+import electrolyte_fm
 
 import torch
 from pytorch_lightning import Trainer
@@ -9,17 +10,11 @@ from transformers import LineByLineTextDataset, RobertaTokenizerFast
 from electrolyte_fm.models.roberta_base import RoBERTa
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 
-here = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+here = os.path.abspath(os.path.dirname(electrolyte_fm.__file__))
 
 TOKENIZER_PATH = os.path.join(here, "pretrained_tokenizers/ZINC_250k/")
 DATASET_PATH = os.path.join(here, "raw_data/250k_zinc.txt")
 MAX_EPOCHS = 4
-NUM_NODES = int(os.environ["SLURM_NNODES"])
-try:
-    GPUS_PER_NODE = int(os.environ["SLURM_GPUS_ON_NODE"])
-except KeyError:
-    GPUS_PER_NODE = int(len(os.environ["SLURM_JOB_GPUS"].split(',')))
-
 tokenizer = RobertaTokenizerFast.from_pretrained(TOKENIZER_PATH, max_len=512)
 
 dataset = LineByLineTextDataset(
@@ -40,19 +35,18 @@ model = RoBERTa(
 )
 
 
-wandb_logger = WandbLogger(
-    name=f"{torch.cuda.get_device_name()}_NN_{NUM_NODES}_GPN_{GPUS_PER_NODE}",
-    project="electrolyte-fm",
-)
-callbacks = [ThroughputMonitor(batch_size=64, num_nodes=NUM_NODES, wandb_active=True)]
+wandb_logger = WandbLogger(project="electrolyte-fm")
+callbacks = [ThroughputMonitor(batch_size=64)]
 trainer = Trainer(
     max_epochs=MAX_EPOCHS,
     accelerator="gpu",
-    devices=list(range(GPUS_PER_NODE)),
-    num_nodes=NUM_NODES,
     logger=wandb_logger,
     callbacks=callbacks,
-    # limit_train_batches=10,
-    # limit_val_batches=5,
+    limit_train_batches=10,
+    limit_val_batches=10,
+)
+
+trainer.logger.log_hyperparams(
+    {"n_gpus_per_node": trainer.num_devices, "n_nodes": trainer.num_nodes}
 )
 trainer.fit(model)
