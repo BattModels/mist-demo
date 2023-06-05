@@ -5,35 +5,45 @@
 #PBS -l filesystems=home
 #PBS -j oe
 #PBS -q debug
-#PBS -A Catalyst
+#PBS -A fm_electrolyte
 
-# Enable GPU-MPI (if supported by application)
-export MPICH_GPU_SUPPORT_ENABLED=1
-
-# Change to working directory
+# Change to working directory (Git Working Directory)
 cd ${PBS_O_WORKDIR}
+echo "PWD: $(pwd)"
 
+# Load Modules
+module load e4s/22.05/PrgEnv-gnu
+module load openmpi/4.1.3
 module load singularity/3.8.7
 
-# PATH to the Container
-CONTAINER="/lus/swift/home/awadell/training_container.sif"
+# Enable internet
+source ./submit/proxy_settings.sh
 
 # MPI and OpenMP settings
 NNODES=$(wc -l <$PBS_NODEFILE)
-NRANKS_PER_NODE=$(nvidia-smi -L | wc -l)
-NDEPTH=8
-NTHREADS=1
+NRANKS_PER_NODE=1
+NDEPTH=64
 
 NTOTRANKS=$((NNODES * NRANKS_PER_NODE))
-echo "NUM_OF_NODES= ${NNODES} TOTAL_NUM_RANKS= ${NTOTRANKS} RANKS_PER_NODE= ${NRANKS_PER_NODE} THREADS_PER_RANK= ${NTHREADS}"
+echo "NUM_OF_NODES= ${NNODES} TOTAL_NUM_RANKS= ${NTOTRANKS} RANKS_PER_NODE= ${NRANKS_PER_NODE}"
+echo <$PBS_NODEFILE
 
-# For applications that need mpiexec to bind MPI ranks to GPUs
+# Logging
+echo "$(df -h /local/scratch)"
+
+# NCCL settings
+export NCCL_DEBUG=INFO
+export NCCL_NET_GDR_LEVEL=PHB
+
+env
+
+# Launch Training
 mpiexec \
 	-n ${NTOTRANKS} \
 	--ppn ${NRANKS_PER_NODE} \
 	--depth=${NDEPTH} \
-	--cpu-bind depth \
-	--env OMP_NUM_THREADS=${NTHREADS} \
-	-env OMP_PLACES=threads \
-	./set_affinity_gpu_polaris.sh \
-	singularity run -B /lus:/lus --nv ${CONTAINER} python train.py --trainer.fast_dev_run 2
+	--cpu-bind none \
+	--mem-bind none \
+	--hostfile $PBS_NODEFILE \
+	./submit/set_affinity_gpu_polaris.sh \
+	singularity run -B /lus:/lus --nv ./training_container.sif python train.py fit --trainer.max_epochs 2
