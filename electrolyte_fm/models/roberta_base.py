@@ -12,11 +12,11 @@ class RoBERTa(pl.LightningModule):
     """
 
     def __init__(
-        self,
-        vocab_size: int = 52_000,
-        max_position_embeddings: int = 512,
-        num_attention_heads: int = 12,
-        num_hidden_layers: int = 6,
+            self,
+            vocab_size: int = 52_000,
+            max_position_embeddings: int = 512,
+            num_attention_heads: int = 12,
+            num_hidden_layers: int = 6,
     ) -> None:
         super().__init__()
         self.save_hyperparameters()
@@ -50,6 +50,12 @@ class RoBERTa(pl.LightningModule):
             prog_bar=True,
             sync_dist=True,
         )
+
+        self.log(
+            "train/perplexity",
+            torch.exp(loss.cpu().long()).item(),
+            on_step=True, on_epoch=True, prog_bar=True, sync_dist=True
+        )
         return loss
 
     def validation_step(self, batch, batch_idx: int) -> torch.FloatTensor:
@@ -57,6 +63,11 @@ class RoBERTa(pl.LightningModule):
         loss = outputs.loss
         self.log(
             "val/loss", loss, on_step=True, on_epoch=True, prog_bar=True, sync_dist=True
+        )
+        self.log(
+            "val/perplexity",
+            torch.exp(loss.cpu().long()).item(),
+            on_step=True, on_epoch=True, prog_bar=True, sync_dist=True
         )
         return loss
 
@@ -70,6 +81,12 @@ class RoBERTa(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             sync_dist=True,
+        )
+
+        self.log(
+            "test/perplexity",
+            torch.exp(loss.cpu().long()).item(),
+            on_step=True, on_epoch=True, prog_bar=True, sync_dist=True
         )
         return loss
 
