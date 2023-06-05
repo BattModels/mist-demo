@@ -1,4 +1,5 @@
 from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.cli import LightningCLI
 from electrolyte_fm.models.roberta_base import RoBERTa
 from electrolyte_fm.models.dataset import RobertaDataSet
@@ -16,7 +17,7 @@ class MyLightningCLI(LightningCLI):
 
 
 def cli_main():
-    callbacks = [ThroughputMonitor()]
+    callbacks = [ThroughputMonitor(), EarlyStopping(monitor='val/perplexity')]
     MyLightningCLI(
         RoBERTa,
         RobertaDataSet,
