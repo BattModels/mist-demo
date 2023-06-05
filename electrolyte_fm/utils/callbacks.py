@@ -13,14 +13,13 @@ from pytorch_lightning.callbacks import Callback
 class ThroughputMonitor(Callback):
     """Custom callback in order to monitor the throughput and log to weights and biases."""
 
-    def __init__(self, batch_size: int) -> None:
+    def __init__(self) -> None:
         """Logs throughput statistics starting at the 2nd epoch."""
         super().__init__()
         self.start_time = 0.0
         self.batch_times: List[float] = []
         self.epoch_throughputs: List[float] = []
         self.epoch_sample_times: List[float] = []
-        self.batch_size = batch_size
 
     def on_train_batch_start(
         self,
@@ -51,7 +50,7 @@ class ThroughputMonitor(Callback):
         if pl_module.current_epoch > 0:
             # compute average epoch throughput
             avg_batch_time = mean(self.batch_times)
-            macro_batch_size = trainer.world_size * self.batch_size
+            macro_batch_size = trainer.world_size * trainer.datamodule.batch_size
             avg_epoch_throughput = macro_batch_size / avg_batch_time
             avg_secs_per_sample = avg_batch_time / macro_batch_size
 
@@ -97,7 +96,8 @@ class ThroughputMonitor(Callback):
                     "stats/throughput_stdev": throughputs.std().item(),
                     "stats/sample_time_avg": sample_times.mean().item(),
                     "stats/sample_time_stdev": sample_times.std().item(),
-                    "stats/macro_batch_size": self.batch_size * trainer.world_size,
+                    "stats/macro_batch_size": trainer.datamodule.batch_size
+                    * trainer.world_size,
                     "stats/ranks": trainer.world_size,
                 }
             )
