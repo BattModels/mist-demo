@@ -1,11 +1,9 @@
-import os
-
-import pytorch_lightning as pl
 import torch
-from torch.utils.data import DataLoader
-from transformers import (DataCollatorForLanguageModeling,
-                          LineByLineTextDataset, RobertaConfig,
-                          RobertaForMaskedLM, RobertaTokenizerFast)
+import pytorch_lightning as pl
+from transformers import (
+    RobertaConfig,
+    RobertaForMaskedLM,
+)
 
 
 class RoBERTa(pl.LightningModule):
@@ -15,26 +13,14 @@ class RoBERTa(pl.LightningModule):
 
     def __init__(
         self,
-        tokenizer_path: str,
-        train_dataset: LineByLineTextDataset,
-        val_dataset: LineByLineTextDataset,
-        test_dataset: LineByLineTextDataset,
         vocab_size: int = 52_000,
         max_position_embeddings: int = 512,
         num_attention_heads: int = 12,
         num_hidden_layers: int = 6,
     ) -> None:
         super().__init__()
+        self.save_hyperparameters()
 
-        self.tokenizer = RobertaTokenizerFast.from_pretrained(
-            tokenizer_path, max_len=512
-        )
-        self.data_collator = DataCollatorForLanguageModeling(
-            tokenizer=self.tokenizer, mlm=True, mlm_probability=0.15
-        )
-        self.train_dataset = train_dataset
-        self.val_dataset = val_dataset
-        self.test_dataset = test_dataset
         self.config = RobertaConfig(
             vocab_size=vocab_size,
             max_position_embeddings=max_position_embeddings,
@@ -43,42 +29,6 @@ class RoBERTa(pl.LightningModule):
             type_vocab_size=1,
         )
         self.model = RobertaForMaskedLM(config=self.config)
-        try:
-            SLURM_GPUS_ON_NODE = int(os.environ["SLURM_GPUS_ON_NODE"])
-        except KeyError:
-            SLURM_GPUS_ON_NODE = int(len(os.environ["SLURM_JOB_GPUS"].split(',')))
-        if self.global_rank == 0:
-            self.save_hyperparameters(
-                {
-                    "n_gpus_per_node": SLURM_GPUS_ON_NODE,
-                    "n_nodes": int(os.environ["SLURM_NNODES"]),
-                }
-            )
-
-    def setup(self, stage):
-        if not hasattr(self, "model"):
-            self.model = RobertaForMaskedLM(config=self.config)
-
-    def train_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.train_dataset,
-            shuffle=True,
-            collate_fn=self.data_collator,
-            batch_size=64,
-        )
-
-    def val_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.val_dataset, shuffle=True, collate_fn=self.data_collator, batch_size=64
-        )
-
-    def test_dataloader(self) -> DataLoader:
-        return DataLoader(
-            self.test_dataloader,
-            shuffle=True,
-            collate_fn=self.data_collator,
-            batch_size=64,
-        )
 
     def forward(self, batch, **kwargs):  # type: ignore[override]
         out = self.model(
