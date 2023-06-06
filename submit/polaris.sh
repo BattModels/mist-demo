@@ -8,7 +8,7 @@
 #PBS -A fm_electrolyte
 
 # Change to working directory (Git Working Directory)
-cd ${PBS_O_WORKDIR}
+#cd ${PBS_O_WORKDIR}
 echo "PWD: $(pwd)"
 
 # Load Modules
@@ -19,9 +19,13 @@ module load singularity/3.8.7
 # Enable internet
 source ./submit/proxy_settings.sh
 
+export MASTER_ADDR=localhost
+export MASTER_PORT=2345
+
 # MPI and OpenMP settings
 NNODES=$(wc -l <$PBS_NODEFILE)
-NRANKS_PER_NODE=1
+NNODES=1
+NRANKS_PER_NODE=4
 NDEPTH=64
 
 NTOTRANKS=$((NNODES * NRANKS_PER_NODE))
@@ -35,15 +39,11 @@ echo "$(df -h /local/scratch)"
 export NCCL_DEBUG=INFO
 export NCCL_NET_GDR_LEVEL=PHB
 
-env
-
 # Launch Training
+pwd
 mpiexec \
 	-n ${NTOTRANKS} \
-	--ppn ${NRANKS_PER_NODE} \
-	--depth=${NDEPTH} \
-	--cpu-bind none \
-	--mem-bind none \
-	--hostfile $PBS_NODEFILE \
-	./submit/set_affinity_gpu_polaris.sh \
-	singularity run -B /lus:/lus --nv ./training_container.sif python train.py fit --trainer.max_epochs 2
+	bash ./submit/run-polaris-generation.sh \
+	singularity run \
+	--nv \
+	./training_container.sif python train.py --trainer.fast_dev_run 1

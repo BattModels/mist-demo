@@ -1,0 +1,4 @@
+*_sandbox/
+.spack-env/
+spack.lock
+*.sif

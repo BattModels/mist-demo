@@ -1,0 +1,96 @@
+Bootstrap: docker
+From: spack/ubuntu-jammy
+Stage: build
+
+%post
+  # Update, install and cleanup of system packages needed at build-time
+  apt-get -yqq install python3
+  rm -rf /var/lib/apt/lists/*
+
+  # Create the manifest file for the installation in /opt/spack-environment
+  mkdir /opt/spack-environment && cd /opt/spack-environment
+  cat << EOF > spack.yaml
+spack:
+  specs:
+  - mpich~hydra~slurm~wrapperrpath
+  concretizer:
+    unify: true
+    targets:
+      granularity: generic
+  config:
+    template_dirs:
+    - templates/
+    install_tree: /opt/software
+  packages:
+    python:
+      externals:
+      - spec: python@3.10.6
+        prefix: /usr
+    curl:
+      externals:
+      - spec: curl@7.81.0+gssapi+ldap+nghttp2
+        prefix: /usr
+    tar:
+      externals:
+      - spec: tar@1.34
+        prefix: /usr
+    diffutils:
+      externals:
+      - spec: diffutils@3.8
+        prefix: /usr
+    findutils:
+      externals:
+      - spec: findutils@4.8.0
+        prefix: /usr
+    openssl:
+      externals:
+      - spec: openssl@3.0.2
+        prefix: /usr
+    gmake:
+      externals:
+      - spec: gmake@4.3
+        prefix: /usr
+    coreutils:
+      externals:
+      - spec: coreutils@8.32
+        prefix: /usr
+    binutils:
+      externals:
+      - spec: binutils@2.38
+        prefix: /usr
+    git:
+      externals:
+      - spec: git@2.34.1~tcltk
+        prefix: /usr
+  view: /opt/view
+EOF
+
+  # Install all the required software
+  . /opt/spack/share/spack/setup-env.sh
+  spack -e . concretize
+  spack -e . install
+  spack gc -y
+  spack env activate --sh -d . >> /opt/spack-environment/environment_modifications.sh
+
+  # Strip the binaries to reduce the size of the image
+  find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
+    xargs file -i | \
+    grep 'charset=binary' | \
+    grep 'x-executable\|x-archive\|x-sharedlib' | \
+    awk -F: '{print $1}' | xargs strip
+
+Bootstrap: localimage
+From: ./training_container.sif
+Stage: final
+
+%files from build
+  /opt/spack-environment /opt
+  /opt/software /opt
+  /opt/._view /opt
+  /opt/view /opt
+  /opt/spack-environment/environment_modifications.sh /opt/spack-environment/environment_modifications.sh
+
+%post
+  # Modify the environment without relying on sourcing shell specific files at startup
+  cat /opt/spack-environment/environment_modifications.sh >> $SINGULARITY_ENVIRONMENT
+
