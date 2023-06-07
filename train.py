@@ -1,7 +1,7 @@
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.cli import LightningCLI
 from electrolyte_fm.models.roberta_base import RoBERTa
-from electrolyte_fm.models.dataset import RobertaDataSet
+from electrolyte_fm.models.roberta_dataset import RobertaDataSet
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 
 
