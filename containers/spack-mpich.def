@@ -12,7 +12,7 @@ Stage: build
   cat << EOF > spack.yaml
 spack:
   specs:
-  - mpich~hydra~slurm~wrapperrpath
+  - mpich@4.0.2 ~hydra~slurm~wrapperrpath
   concretizer:
     unify: true
     targets:

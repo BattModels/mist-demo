@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: nvcr.io/nvidia/pytorch:23.05-py3
+From: ghcr.io/argonne-lcf/intel-optimized-pytorch-with-mpich:latest
 
 %post
     python3 -m pip install pytorch-lightning wandb transformers jsonargparse[signatures]
