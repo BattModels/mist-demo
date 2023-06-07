@@ -6,6 +6,7 @@
 #PBS -j oe
 #PBS -q debug
 #PBS -A fm_electrolyte
+set -x
 cd ${PBS_O_WORKDIR}
 
 source "${PBS_O_WORKDIR}/submit/proxy_settings.sh"
@@ -25,16 +26,16 @@ export NCCL_DEBUG=info
 export NCCL_NET_GDR_LEVEL=PHB
 
 # Setup workld
-export NNODES=$(wc -l <$PBS_NODEFILE)
+export NUM_OF_NODES=$(wc -l <$PBS_NODEFILE)
 PPN=4
-PROCS=$((NODES * PPN))
+PROCS=$(($NUM_OF_NODES * PPN))
 echo "NUM_OF_NODES= ${NODES} TOTAL_NUM_RANKS= ${PROCS} RANKS_PER_NODE= ${PPN}"
 
 # Actually launch the job
 # - Need to `--no-home` to avoid issue with mpich + other MPIs
 # - Need to bind in the working directory to have access to the code
 mpiexec \
-	-hostfile $PBS_NODEFILE \
+	-hostfile "$PBS_NODEFILE" \
 	-n $PROCS \
 	-ppn $PPN \
 	singularity exec \
@@ -42,5 +43,6 @@ mpiexec \
 	-B /var/run/palsd/ \
 	-B "${PBS_O_WORKDIR}":/fme \
 	--nv \
-	bash "/fme/submit/polaris-launcher.sh" \
+	"${PBS_O_WORKDIR}/containers/polaris-deep-learning.sif" \
+	bash "/fme/submit/polaris_launcher.sh" \
 	python /fme/train.py fit --trainer.max_epochs=4

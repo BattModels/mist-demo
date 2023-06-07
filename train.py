@@ -17,7 +17,7 @@ class MyLightningCLI(LightningCLI):
 
 @leader_only
 def logger():
-    """ Ensure that Wandb only gets launcher on Rank-0 """:w
+    """ Ensure that Wandb only gets launcher on Rank-0 """
     return WandbLogger(project="electrolyte-fm")
 
 
