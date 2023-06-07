@@ -3,6 +3,7 @@ from pytorch_lightning.cli import LightningCLI
 from electrolyte_fm.models.roberta_base import RoBERTa
 from electrolyte_fm.models.dataset import RobertaDataSet
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
+from electrolyte_fm.utils.decorator import leader_only
 
 
 class MyLightningCLI(LightningCLI):
@@ -14,6 +15,11 @@ class MyLightningCLI(LightningCLI):
             }
         )
 
+@leader_only
+def logger():
+    """ Ensure that Wandb only gets launcher on Rank-0 """:w
+    return WandbLogger(project="electrolyte-fm")
+
 
 def cli_main():
     callbacks = [ThroughputMonitor()]
@@ -22,7 +28,7 @@ def cli_main():
         RobertaDataSet,
         trainer_defaults={
             "callbacks": callbacks,
-            "logger": WandbLogger(project="electrolyte-fm"),
+            "logger": logger(),
         },
         save_config_callback=None,
     )
