@@ -24,6 +24,8 @@ export MASTER_PORT=2345
 # NCCL settings
 export NCCL_DEBUG=info
 export NCCL_NET_GDR_LEVEL=PHB
+export NCCL_NSOCKS_PERTHREAD=4
+export NCCL_SOCKET_NTHREADS=4
 
 # Setup workld
 export NUM_OF_NODES=$(wc -l <$PBS_NODEFILE)
@@ -44,5 +46,4 @@ mpiexec \
 	-B "${PBS_O_WORKDIR}":/fme \
 	--nv \
 	"${PBS_O_WORKDIR}/containers/polaris-deep-learning.sif" \
-	bash "/fme/submit/polaris_launcher.sh" \
-	python /fme/train.py fit --trainer.max_epochs=4
+	python3 /fme/train.py fit --trainer.max_epochs 2
