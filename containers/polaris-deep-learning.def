@@ -1,0 +1,9 @@
+Bootstrap: oras
+From: ghcr.io/argonne-lcf/mpich-4:latest
+
+%post
+    python3 -m pip install torch~=2.0 pytorch-lightning~=2.0 transformers~=4.0 mpi4py wandb jsonargparse[signatures]
+
+%runscript
+    unset PYTHONSTARTUP
+    $@

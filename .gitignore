@@ -3,3 +3,7 @@ __pycache__/
 wandb/
 .conda/
 electrolyte-fm/
+lightning_logs/
+
+# Log files
+*.o*
