@@ -11,15 +11,15 @@ from transformers import (
 
 class RobertaDataSet(pl.LightningDataModule):
     def __init__(
-            self,
-            tokenizer_path=None,
-            dataset_path=None,
-            structure_data: bool = False,
-            max_length: int = 512,
-            mlm_probability=0.15,
-            block_size: int = 128,
-            batch_size: int = 64,
-            val_batch_size=None,
+        self,
+        tokenizer_path=None,
+        dataset_path=None,
+        structure_data: bool = False,
+        max_length: int = 512,
+        mlm_probability=0.15,
+        block_size: int = 128,
+        batch_size: int = 64,
+        val_batch_size=None,
     ):
         super().__init__()
         self.tokenizer_dir: str = "ZINC_250k_XYZ" if structure_data else "ZINC_250k"

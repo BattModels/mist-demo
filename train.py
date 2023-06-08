@@ -7,6 +7,7 @@ from electrolyte_fm.models.roberta_dataset import RoBERTaDataSet
 from electrolyte_fm.models.roformer_dataset import RoFormerDataSet
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 
+
 class MyLightningCLI(LightningCLI):
     def before_fit(self):
         self.trainer.logger.log_hyperparams(
@@ -15,6 +16,7 @@ class MyLightningCLI(LightningCLI):
                 "n_nodes": self.trainer.num_nodes,
             }
         )
+
 
 def cli_main():
     callbacks = [ThroughputMonitor(), EarlyStopping(monitor='val/perplexity')]
@@ -26,9 +28,9 @@ def cli_main():
         save_config_callback=None,
     )
 
+
 if __name__ == "__main__":
     cli_main()
-
 
 if __name__ == "__main__":
     cli_main()

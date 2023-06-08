@@ -11,15 +11,15 @@ from transformers import (
 
 class RoFormerDataSet(pl.LightningDataModule):
     def __init__(
-            self,
-            dataset_path=None,
-            tokenizer_path=None,
-            structure_data: bool = False,
-            max_length: int = 512,
-            mlm_probability=0.15,
-            block_size: int = 128,
-            batch_size: int = 64,
-            val_batch_size=None,
+        self,
+        dataset_path=None,
+        tokenizer_path=None,
+        structure_data: bool = False,
+        max_length: int = 512,
+        mlm_probability=0.15,
+        block_size: int = 128,
+        batch_size: int = 64,
+        val_batch_size=None,
     ):
         super().__init__()
 
@@ -30,7 +30,9 @@ class RoFormerDataSet(pl.LightningDataModule):
             else Path(__file__).parent.parent.joinpath("raw_data", self.datafile)
         )
 
-        self.tokenizer_dir: str = "XYZWordPieceTokenizer" if structure_data else "SMILESWordPieceTokenizer"
+        self.tokenizer_dir: str = (
+            "XYZWordPieceTokenizer" if structure_data else "SMILESWordPieceTokenizer"
+        )
 
         self.tokenizer_path: Path = (
             Path(tokenizer_path)
