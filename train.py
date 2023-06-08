@@ -49,7 +49,7 @@ def cli_main():
             "callbacks": callbacks,
             "logger": logger,
             "plugins": mpienv,
-            "precision": 16,
+            "precision": "16-mixed",
             "devices": num_gpus_per_node,
             "num_nodes": num_nodes,
             "strategy": "ddp",
