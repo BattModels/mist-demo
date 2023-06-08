@@ -1,3 +1,6 @@
+from os import walk
+
+from lightning_fabric import plugins
 import torch
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
@@ -8,7 +11,6 @@ from pytorch_lightning.plugins.environments import MPIEnvironment
 from electrolyte_fm.models.roberta_base import RoBERTa
 from electrolyte_fm.models.dataset import RobertaDataSet
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
-from electrolyte_fm.utils.decorator import leader_only
 
 
 class MyLightningCLI(LightningCLI):
@@ -21,18 +23,10 @@ class MyLightningCLI(LightningCLI):
         )
 
 
-@leader_only
-def logger():
-    """Ensure that Wandb only gets launcher on Rank-0"""
-    return WandbLogger(project="electrolyte-fm")
-
-
-def cli_main():
-    callbacks = [
-        ThroughputMonitor(),
-        EarlyStopping(monitor="val/perplexity"),
-    ]
+def detect_mpi(trainer_defaults: dict):
     mpienv = MPIEnvironment()
+    if not mpienv.detect():
+        return trainer_defaults
     print(
         {
             "WORLD_SIZE": mpienv.world_size(),
@@ -44,23 +38,40 @@ def cli_main():
     )
     num_gpus_per_node = 4
     num_nodes = int(mpienv.world_size() / num_gpus_per_node)
-    if mpienv.global_rank() == 0:
-        logger = WandbLogger(project="electrolyte-fm")
+    trainer_defaults["num_nodes"] = num_nodes
+    trainer_defaults["devices"] = num_gpus_per_node
+    trainer_defaults["plugins"] = mpienv
+    return trainer_defaults
+
+
+def logger():
+    return WandbLogger(project="electrolyte-fm")
+
+
+def cli_main():
+    callbacks = [
+        ThroughputMonitor(),
+        EarlyStopping(monitor="val/perplexity"),
+    ]
+    trainer_defaults = {
+        "callbacks": callbacks,
+        "precision": "16-mixed",
+        "strategy": "ddp",
+    }
+    trainer_defaults = detect_mpi(trainer_defaults)
+
+    # Decide if we should load wandb
+    if "plugins" in trainer_defaults:
+        mpienv = trainer_defaults["plugins"]
+        if mpienv.global_rank() == 0:
+            trainer_defaults["logger"] = logger()
     else:
-        logger = None
+        trainer_defaults["logger"] = logger()
 
     MyLightningCLI(
         RoBERTa,
         RobertaDataSet,
-        trainer_defaults={
-            "callbacks": callbacks,
-            "logger": logger,
-            "plugins": mpienv,
-            "precision": "16-mixed",
-            "devices": num_gpus_per_node,
-            "num_nodes": num_nodes,
-            "strategy": "ddp",
-        },
+        trainer_defaults=trainer_defaults,
         save_config_callback=None,
     )
 
