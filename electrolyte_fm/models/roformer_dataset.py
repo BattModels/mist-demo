@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from torch.utils.data import random_split, DataLoader
 from transformers import (
     LineByLineTextDataset,
-    RoFormerTokenizer,
+    BertTokenizerFast,
     DataCollatorForLanguageModeling,
 )
 
@@ -13,7 +13,7 @@ class RoFormerDataSet(pl.LightningDataModule):
     def __init__(
             self,
             dataset_path=None,
-            vocab_filepath=None,
+            tokenizer_path=None,
             structure_data: bool = False,
             max_length: int = 512,
             mlm_probability=0.15,
@@ -30,23 +30,26 @@ class RoFormerDataSet(pl.LightningDataModule):
             else Path(__file__).parent.parent.joinpath("raw_data", self.datafile)
         )
 
-        self.vocab_file: str = "zinc250k_xyz_vocab.txt" if structure_data else "zinc250k_vocab.txt"
-        self.vocab_filepath: Path = (
-            Path(vocab_filepath)
-            if vocab_filepath
-            else Path(__file__).parent.parent.joinpath("raw_data", self.vocab_file)
+        self.tokenizer_dir: str = "XYZWordPieceTokenizer" if structure_data else "SMILESWordPieceTokenizer"
 
+        self.tokenizer_path: Path = (
+            Path(tokenizer_path)
+            if tokenizer_path
+            else Path(__file__).parent.parent.joinpath(
+                "pretrained_tokenizers", self.tokenizer_dir
+            )
         )
-
         self.max_length = max_length
         self.block_size = block_size
         self.mlm_probability = mlm_probability
         self.batch_size = batch_size
         self.val_batch_size = val_batch_size if val_batch_size else batch_size
+        self.structure_data = structure_data
         self.save_hyperparameters()
 
     def setup(self, stage):
-        tokenizer = RoFormerTokenizer(vocab_file=self.vocab_file, do_basic_tokenize=False)
+        tokenizer = BertTokenizerFast.from_pretrained(self.tokenizer_path)
+        tokenizer.model_max_length = self.max_length
         dataset = LineByLineTextDataset(
             tokenizer=tokenizer,
             file_path=str(self.dataset_path),

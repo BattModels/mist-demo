@@ -13,7 +13,7 @@ class RoFormer(pl.LightningModule):
 
     def __init__(
             self,
-            vocab_size: int = 118,
+            vocab_size: int = 52_000,
             max_position_embeddings: int = 512,
             num_attention_heads: int = 12,
             num_hidden_layers: int = 6,
