@@ -3,7 +3,6 @@ import torch
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning import seed_everything
-from pytorch_lightning.strategies import DeepSpeedStrategy
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 from electrolyte_fm.utils.decorator import leader_only
@@ -11,7 +10,7 @@ from electrolyte_fm.utils.decorator import leader_only
 # classes passed via cli
 from electrolyte_fm.models.roberta_base import RoBERTa
 from electrolyte_fm.models.roformer import RoFormer
-from electrolyte_fm.models.roberta_dataset import RoBERTaDataSet
+from electrolyte_fm.models.roberta_dataset import RobertaDataSet
 from electrolyte_fm.models.roformer_dataset import RoFormerDataSet
 
 
