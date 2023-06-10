@@ -3,10 +3,14 @@ import torch
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning import seed_everything
-
-from electrolyte_fm.models.roberta_base import RoBERTa
-from electrolyte_fm.models.dataset import RobertaDataSet
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
+
+# classes passed via cli
+from electrolyte_fm.models.roberta_base import RoBERTa
+from electrolyte_fm.models.roformer import RoFormer
+from electrolyte_fm.models.roberta_dataset import RobertaDataSet
+from electrolyte_fm.models.roformer_dataset import RoFormerDataSet
 
 
 class MyLightningCLI(LightningCLI):
@@ -21,9 +25,8 @@ class MyLightningCLI(LightningCLI):
 
 
 def cli_main():
-    callbacks = [ThroughputMonitor()]
+    callbacks = [ThroughputMonitor(), EarlyStopping(monitor='val/perplexity')]
 
-    # Not the normal "World Size", Lightning's notion of world size
     num_nodes = os.environ.get("NRANKS")
     rank = os.environ.get("PMI_RANK")
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
@@ -34,8 +37,6 @@ def cli_main():
 
     torch.set_num_threads(8)
     MyLightningCLI(
-        RoBERTa,
-        RobertaDataSet,
         trainer_defaults={
             "callbacks": callbacks,
             "logger": logger,
