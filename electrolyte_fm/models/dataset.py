@@ -66,6 +66,10 @@ class RobertaDataSet(pl.LightningDataModule):
             shuffle=True,
             collate_fn=self.data_collator,
             batch_size=self.batch_size,
+            #num_workers=1,
+            #prefetch_factor=4,
+            #pin_memory=True,
+            #persistent_workers=True,
         )
 
     def val_dataloader(self):
@@ -73,9 +77,13 @@ class RobertaDataSet(pl.LightningDataModule):
             self.val_dataset,
             collate_fn=self.data_collator,
             batch_size=self.val_batch_size,
+            #num_workers=1,
+            #prefetch_factor=4,
+            #pin_memory=True,
+            #persistent_workers=True,
         )
 
-    def train_dataset(self):
+    def test_dataset(self):
         return DataLoader(
             self.test_dataset,
             collate_fn=self.data_collator,

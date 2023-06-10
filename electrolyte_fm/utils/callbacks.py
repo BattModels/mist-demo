@@ -50,7 +50,8 @@ class ThroughputMonitor(Callback):
         if pl_module.current_epoch > 0:
             # compute average epoch throughput
             avg_batch_time = mean(self.batch_times)
-            macro_batch_size = trainer.world_size * trainer.datamodule.batch_size
+            # TODO: Get the number of GPUs per Device
+            macro_batch_size = trainer.world_size * trainer.datamodule.batch_size * 4
             avg_epoch_throughput = macro_batch_size / avg_batch_time
             avg_secs_per_sample = avg_batch_time / macro_batch_size
 
