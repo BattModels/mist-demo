@@ -3,8 +3,11 @@ from pathlib import Path
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader, random_split
-from transformers import (BertTokenizerFast, DataCollatorForLanguageModeling,
-                          LineByLineTextDataset)
+from transformers import (
+    BertTokenizerFast,
+    DataCollatorForLanguageModeling,
+    LineByLineTextDataset,
+)
 
 
 class RoFormerDataSet(pl.LightningDataModule):
