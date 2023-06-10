@@ -1,5 +1,6 @@
 import os
 
+
 def leader_only(f):
     def wrapper():
         rank = os.environ.get("RANK")

@@ -1,18 +1,18 @@
 import os
 import torch
-import torch.multiprocessing as mp
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning import seed_everything
-from pytorch_lightning.strategies import  DeepSpeedStrategy
-#from pytorch_lightning.plugins.environments import MPIEnvironment
+from pytorch_lightning.strategies import DeepSpeedStrategy
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from electrolyte_fm.utils.callbacks import ThroughputMonitor
+from electrolyte_fm.utils.decorator import leader_only
+
+# classes passed via cli
 from electrolyte_fm.models.roberta_base import RoBERTa
 from electrolyte_fm.models.roformer import RoFormer
 from electrolyte_fm.models.roberta_dataset import RoBERTaDataSet
 from electrolyte_fm.models.roformer_dataset import RoFormerDataSet
-from electrolyte_fm.utils.callbacks import ThroughputMonitor
-from electrolyte_fm.utils.decorator import leader_only
 
 
 class MyLightningCLI(LightningCLI):
@@ -24,6 +24,7 @@ class MyLightningCLI(LightningCLI):
             }
         )
 
+
 @leader_only
 def logger():
     """ Ensure that Wandb only gets launcher on Rank-0 """
@@ -31,15 +32,15 @@ def logger():
 
 
 def cli_main():
-    callbacks = [ThroughputMonitor()]
-    #mpienv = MPIEnvironment()
-    #print({
+    callbacks = [ThroughputMonitor(), EarlyStopping(monitor='val/perplexity')]
+    # mpienv = MPIEnvironment()
+    # print({
     #    "WORLD_SIZE": mpienv.world_size(),
     #    "GLOBAL_RANK": mpienv.global_rank(),
     #    "LOCAL_RANK": mpienv.local_rank(),
     #    "MAIN_ADDRESS": mpienv.main_address,
     #    "MAIN_PORT": mpienv.main_port,
-    #})
+    # })
     with open("hellow", "w+") as fid:
         fid.write("hellow world")
 
@@ -69,7 +70,8 @@ def cli_main():
         save_config_callback=None,
     )
 
+
 if __name__ == "__main__":
     seed_everything(42, workers=True)
-    #mp.set_start_method("spawn")
+    # mp.set_start_method("spawn")
     cli_main()

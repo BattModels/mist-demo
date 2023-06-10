@@ -1,9 +1,6 @@
-import torch
 import pytorch_lightning as pl
-from transformers import (
-    RobertaConfig,
-    RobertaForMaskedLM,
-)
+import torch
+from transformers import RobertaConfig, RobertaForMaskedLM
 
 
 class RoBERTa(pl.LightningModule):

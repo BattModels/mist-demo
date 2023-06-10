@@ -1,9 +1,6 @@
-import torch
 import pytorch_lightning as pl
-from transformers import (
-    RoFormerConfig,
-    RoFormerForMaskedLM,
-)
+import torch
+from transformers import RoFormerConfig, RoFormerForMaskedLM
 
 
 class RoFormer(pl.LightningModule):

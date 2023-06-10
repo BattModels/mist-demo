@@ -1,12 +1,10 @@
 from pathlib import Path
-import torch
+
 import pytorch_lightning as pl
-from torch.utils.data import random_split, DataLoader
-from transformers import (
-    LineByLineTextDataset,
-    RobertaTokenizerFast,
-    DataCollatorForLanguageModeling,
-)
+import torch
+from torch.utils.data import DataLoader, random_split
+from transformers import (DataCollatorForLanguageModeling,
+                          LineByLineTextDataset, RobertaTokenizerFast)
 
 
 class RobertaDataSet(pl.LightningDataModule):
