@@ -6,8 +6,11 @@ from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning import seed_everything
 from pytorch_lightning.strategies import  DeepSpeedStrategy
 #from pytorch_lightning.plugins.environments import MPIEnvironment
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from electrolyte_fm.models.roberta_base import RoBERTa
-from electrolyte_fm.models.dataset import RobertaDataSet
+from electrolyte_fm.models.roformer import RoFormer
+from electrolyte_fm.models.roberta_dataset import RoBERTaDataSet
+from electrolyte_fm.models.roformer_dataset import RoFormerDataSet
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 from electrolyte_fm.utils.decorator import leader_only
 
@@ -55,8 +58,6 @@ def cli_main():
 
     torch.set_num_threads(8)
     MyLightningCLI(
-        RoBERTa,
-        RobertaDataSet,
         trainer_defaults={
             "callbacks": callbacks,
             "logger": logger,
