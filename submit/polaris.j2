@@ -1,9 +1,10 @@
 #!/bin/sh
-#PBS -l select=2:system=polaris
+#PBS -N {{ jobname }}
+#PBS -l select={{ nodes }}:system=polaris
 #PBS -l place=scatter
 #PBS -l filesystems=swift:home
 #PBS -l walltime=00:10:00
-#PBS -q debug
+#PBS -q {{ queue }}
 #PBS -A fm_electrolyte
 #PBS -k doe
 cd $PBS_O_WORKDIR
@@ -56,4 +57,7 @@ mpiexec \
 	--mem-bind none \
 	--hostfile $PBS_NODEFILE \
 	${PBS_O_WORKDIR}/submit/run-polaris.sh \
-	python3 train.py fit --trainer.max_epochs 5 --data.batch_size 128
+	python3 train.py fit \
+    {% for key,value in config.items() %}
+        --{{ key }} {{ value}} \
+    {% endfor %}

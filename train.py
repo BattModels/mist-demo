@@ -5,7 +5,6 @@ from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
-from electrolyte_fm.utils.decorator import leader_only
 
 # classes passed via cli
 from electrolyte_fm.models.roberta_base import RoBERTa
@@ -20,14 +19,9 @@ class MyLightningCLI(LightningCLI):
             {
                 "n_gpus_per_node": self.trainer.num_devices,
                 "n_nodes": self.trainer.num_nodes,
+                "world_size": self.trainer.world_size,
             }
         )
-
-
-@leader_only
-def logger():
-    """ Ensure that Wandb only gets launcher on Rank-0 """
-    return WandbLogger(project="electrolyte-fm")
 
 
 def cli_main():
@@ -46,11 +40,9 @@ def cli_main():
     num_gpus_per_node = 4
 
     # Not the normal "World Size", Lightning's notion of world size
-    # num_nodes = mpienv.world_size()
-    num_nodes = 2
-    print(f"Number of Nodes: {num_nodes}")
+    num_nodes = os.environ.get("NRANKS")
     rank = os.environ.get("PMI_RANK")
-    print(f"ENV RANK GREP ME: {rank}, PID: {os.getpid()}")
+    print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
     if rank is not None and int(rank) == 0:
         logger = WandbLogger(project="electrolyte-fm")
     else:
@@ -64,7 +56,7 @@ def cli_main():
             "precision": "16-mixed",
             "devices": -1,
             "num_nodes": num_nodes,
-            "strategy": "ddp",
+            "strategy": "deepspeed",
         },
         save_config_callback=None,
     )
@@ -72,5 +64,4 @@ def cli_main():
 
 if __name__ == "__main__":
     seed_everything(42, workers=True)
-    # mp.set_start_method("spawn")
     cli_main()
