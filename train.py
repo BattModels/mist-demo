@@ -63,7 +63,7 @@ def cli_main():
             "precision": "16-mixed",
             "devices": -1,
             "num_nodes": num_nodes,
-            "strategy": "deepspeed",
+            "strategy": "ddp",
         },
         save_config_callback=None,
     )
