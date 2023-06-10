@@ -1,6 +1,5 @@
 import os
 import torch
-import torch.multiprocessing as mp
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning import seed_everything
@@ -8,7 +7,6 @@ from pytorch_lightning import seed_everything
 from electrolyte_fm.models.roberta_base import RoBERTa
 from electrolyte_fm.models.dataset import RobertaDataSet
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
-from electrolyte_fm.utils.decorator import leader_only
 
 
 class MyLightningCLI(LightningCLI):
