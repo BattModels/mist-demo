@@ -22,7 +22,6 @@ class MyLightningCLI(LightningCLI):
 
 def cli_main():
     callbacks = [ThroughputMonitor()]
-    num_gpus_per_node = 4
 
     # Not the normal "World Size", Lightning's notion of world size
     num_nodes = os.environ.get("NRANKS")
