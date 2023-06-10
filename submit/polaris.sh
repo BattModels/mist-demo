@@ -1,49 +1,59 @@
-#!/bin/bash
+#!/bin/sh
+#PBS -l select=2:system=polaris
 #PBS -l place=scatter
-#PBS -l select=1:system=polaris
-#PBS -l walltime=0:10:00
-#PBS -l filesystems=home
-#PBS -j oe
+#PBS -l filesystems=swift:home
+#PBS -l walltime=00:10:00
 #PBS -q debug
 #PBS -A fm_electrolyte
-set -x
-cd ${PBS_O_WORKDIR}
+#PBS -k doe
+cd $PBS_O_WORKDIR
 
-source "${PBS_O_WORKDIR}/submit/proxy_settings.sh"
-
-module load singularity
-module load cray-mpich-abi
-ADDITIONAL_PATH=/opt/cray/pe/pals/1.1.7/lib/
-export SINGULARITYENV_LD_LIBRARY_PATH="$CRAY_LD_LIBRARY_PATH:$LD_LIBRARY_PATH:$ADDITIONAL_PATH"
+# Internet access on nodes
+export HTTPS_PROXY=http://proxy.alcf.anl.gov:3130
+export HTTP_PROXY=http://proxy.alcf.anl.gov:3128
+export http_proxy=http://proxy.alcf.anl.gov:3128
+export https_proxy=http://proxy.alcf.anl.gov:3128
+git config --global http.proxy http://proxy.alcf.anl.gov:3128
+echo "Set HTTP_PROXY and to $HTTP_PROXY"
 
 # Set ADDR and PORT for communication
 master_node=$(cat $PBS_NODEFILE | head -1)
 export MASTER_ADDR=$(host $master_node | head -1 | awk '{print $4}')
 export MASTER_PORT=2345
 
+# Enable GPU-MPI (if supported by application)
+#export MPICH_GPU_SUPPORT_ENABLED=1
+
+# MPI and OpenMP settings
+NNODES=$(wc -l <$PBS_NODEFILE)
+NRANKS_PER_NODE=4
+NDEPTH=64
+
+NTOTRANKS=$((NNODES * NRANKS_PER_NODE))
+echo "NUM_OF_NODES= ${NNODES} TOTAL_NUM_RANKS= ${NTOTRANKS} RANKS_PER_NODE= ${NRANKS_PER_NODE}"
+echo <$PBS_NODEFILE
+
+# Initialize environment
+module load conda
+conda activate base
+source ${PBS_O_WORKDIR}/.venv/bin/activate
+
+export TOKENIZERS_PARALLELISM=true
+
+# Logging
+echo "$(df -h /local/scratch)"
+
 # NCCL settings
-export NCCL_DEBUG=info
+export NCCL_DEBUG=WARN
 export NCCL_NET_GDR_LEVEL=PHB
-export NCCL_NSOCKS_PERTHREAD=4
-export NCCL_SOCKET_NTHREADS=4
 
-# Setup workld
-export NUM_OF_NODES=$(wc -l <$PBS_NODEFILE)
-PPN=4
-PROCS=$(($NUM_OF_NODES * PPN))
-echo "NUM_OF_NODES= ${NODES} TOTAL_NUM_RANKS= ${PROCS} RANKS_PER_NODE= ${PPN}"
-
-# Actually launch the job
-# - Need to `--no-home` to avoid issue with mpich + other MPIs
-# - Need to bind in the working directory to have access to the code
+# For applications that internally handle binding MPI/OpenMP processes to GPUs
 mpiexec \
-	-hostfile "$PBS_NODEFILE" \
-	-n $PROCS \
-	-ppn $PPN \
-	singularity exec \
-	-B /opt \
-	-B /var/run/palsd/ \
-	-B "${PBS_O_WORKDIR}":/fme \
-	--nv \
-	"${PBS_O_WORKDIR}/containers/polaris-deep-learning.sif" \
-	python3 /fme/train.py fit --trainer.max_epochs 2
+	-n ${NTOTRANKS} \
+	--ppn ${NRANKS_PER_NODE} \
+	--depth=${NDEPTH} \
+	--cpu-bind none \
+	--mem-bind none \
+	--hostfile $PBS_NODEFILE \
+	${PBS_O_WORKDIR}/submit/run-polaris.sh \
+	python3 train.py fit --trainer.max_epochs 5 --data.batch_size 128
