@@ -26,20 +26,7 @@ class MyLightningCLI(LightningCLI):
 
 def cli_main():
     callbacks = [ThroughputMonitor(), EarlyStopping(monitor='val/perplexity')]
-    # mpienv = MPIEnvironment()
-    # print({
-    #    "WORLD_SIZE": mpienv.world_size(),
-    #    "GLOBAL_RANK": mpienv.global_rank(),
-    #    "LOCAL_RANK": mpienv.local_rank(),
-    #    "MAIN_ADDRESS": mpienv.main_address,
-    #    "MAIN_PORT": mpienv.main_port,
-    # })
-    with open("hellow", "w+") as fid:
-        fid.write("hellow world")
 
-    num_gpus_per_node = 4
-
-    # Not the normal "World Size", Lightning's notion of world size
     num_nodes = os.environ.get("NRANKS")
     rank = os.environ.get("PMI_RANK")
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
