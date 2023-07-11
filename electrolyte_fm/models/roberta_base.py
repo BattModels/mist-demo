@@ -1,9 +1,6 @@
-import torch
 import pytorch_lightning as pl
-from transformers import (
-    RobertaConfig,
-    RobertaForMaskedLM,
-)
+import torch
+from transformers import RobertaConfig, RobertaForMaskedLM
 
 
 class RoBERTa(pl.LightningModule):
@@ -50,6 +47,15 @@ class RoBERTa(pl.LightningModule):
             prog_bar=True,
             sync_dist=True,
         )
+
+        self.log(
+            "train/perplexity",
+            torch.exp(loss.cpu().long()).item(),
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+        )
         return loss
 
     def validation_step(self, batch, batch_idx: int) -> torch.FloatTensor:
@@ -57,6 +63,14 @@ class RoBERTa(pl.LightningModule):
         loss = outputs.loss
         self.log(
             "val/loss", loss, on_step=True, on_epoch=True, prog_bar=True, sync_dist=True
+        )
+        self.log(
+            "val/perplexity",
+            torch.exp(loss.cpu().long()).item(),
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
         )
         return loss
 
@@ -66,6 +80,15 @@ class RoBERTa(pl.LightningModule):
         self.log(
             "test/loss",
             loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=True,
+        )
+
+        self.log(
+            "test/perplexity",
+            torch.exp(loss.cpu().long()).item(),
             on_step=True,
             on_epoch=True,
             prog_bar=True,

@@ -1,9 +1,0 @@
-Bootstrap: docker
-From: nvcr.io/nvidia/pytorch:23.05-py3
-
-%post
-    python3 -m pip install pytorch-lightning wandb transformers jsonargparse[signatures]
-
-%runscript
-    unset PYTHONSTARTUP
-    $@

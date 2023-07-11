@@ -50,7 +50,7 @@ class ThroughputMonitor(Callback):
         if pl_module.current_epoch > 0:
             # compute average epoch throughput
             avg_batch_time = mean(self.batch_times)
-            macro_batch_size = trainer.world_size * trainer.datamodule.batch_size
+            macro_batch_size = self.macro_batch_size(trainer)
             avg_epoch_throughput = macro_batch_size / avg_batch_time
             avg_secs_per_sample = avg_batch_time / macro_batch_size
 
@@ -81,6 +81,10 @@ class ThroughputMonitor(Callback):
             return self.epoch_sample_times[0]
         return float("nan")
 
+    @staticmethod
+    def macro_batch_size(trainer: "pl.Trainer"):
+        return trainer.datamodule.batch_size * trainer.world_size * trainer.num_devices
+
     def on_train_end(
         self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
     ) -> None:
@@ -96,8 +100,6 @@ class ThroughputMonitor(Callback):
                     "stats/throughput_stdev": throughputs.std().item(),
                     "stats/sample_time_avg": sample_times.mean().item(),
                     "stats/sample_time_stdev": sample_times.std().item(),
-                    "stats/macro_batch_size": trainer.datamodule.batch_size
-                    * trainer.world_size,
-                    "stats/ranks": trainer.world_size,
+                    "stats/macro_batch_size": self.macro_batch_size(trainer),
                 }
             )
