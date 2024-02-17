@@ -25,13 +25,13 @@ class MyLightningCLI(LightningCLI):
 
 
 def cli_main():
-    callbacks = [ThroughputMonitor(), EarlyStopping(monitor='val/perplexity')]
+    callbacks = [ThroughputMonitor(), EarlyStopping(monitor="val/perplexity")]
 
     num_nodes = os.environ.get("NRANKS")
     rank = os.environ.get("PMI_RANK")
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
     if rank is not None and int(rank) == 0:
-        logger = WandbLogger(project="electrolyte-fm")
+        logger = WandbLogger(project="mist")
     else:
         logger = None
 
