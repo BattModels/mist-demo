@@ -26,8 +26,8 @@ def compose(
         dir_okay=False,
         help="Jinja2 Template to render",
     ),
-    data: str = typer.Argument(
-        None,
+    data: str = typer.Option(
+        default=None,
         file_okay=True,
         dir_okay=False,
         show_default="file with `*.yaml` suffix",

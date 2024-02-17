@@ -1,0 +1,17 @@
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: pipx install poetry
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.9
+          cache: 'poetry'
+      - run: poetry install
+      - run: poetry run pytest -n auto -q test/
