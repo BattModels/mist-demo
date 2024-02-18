@@ -5,6 +5,7 @@ from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
+from jsonargparse import lazy_instance
 
 # classes passed via cli
 from electrolyte_fm.models.roberta_base import RoBERTa
@@ -31,7 +32,7 @@ def cli_main():
     rank = os.environ.get("PMI_RANK")
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
     if rank is not None and int(rank) == 0:
-        logger = WandbLogger(project="mist")
+        logger = lazy_instance(WandbLogger, project="mist")
     else:
         logger = None
 
@@ -42,7 +43,7 @@ def cli_main():
             "logger": logger,
             "precision": "16-mixed",
             "devices": -1,
-            "num_nodes": num_nodes,
+            "num_nodes": num_nodes or 1,
             "strategy": "deepspeed",
         },
         save_config_callback=None,

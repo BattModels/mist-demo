@@ -50,7 +50,7 @@ mpiexec \
 {% for key,value in (mpiexe or {}).items() %}
     --{{ key }} {{ value }} \
 {% endfor %}
-   ${PBS_O_WORKDIR}/submit/run-polaris.sh \
+    ${PBS_O_WORKDIR}/submit/run-polaris.sh \
     python3 train.py fit \
 {% for key,value in (train or {}).items() %}
     --{{ key }} {{ value}} {% if not loop.last %}\{% endif %}
