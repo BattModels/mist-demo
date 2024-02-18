@@ -9,3 +9,6 @@ lightning_logs/
 # Log files
 *.o*
 *.e*
+
+# Checkpoints
+*.ckpt/
