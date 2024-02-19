@@ -13,8 +13,8 @@ from transformers import (
 class RobertaDataSet(pl.LightningDataModule):
     def __init__(
         self,
-        tokenizer_path=None,
-        dataset_path=None,
+        tokenizer_path: str,
+        path: str,
         structure_data: bool = False,
         max_length: int = 512,
         mlm_probability=0.15,
@@ -23,22 +23,13 @@ class RobertaDataSet(pl.LightningDataModule):
         val_batch_size=None,
     ):
         super().__init__()
-        self.tokenizer_dir: str = "ZINC_250k_XYZ" if structure_data else "ZINC_250k"
 
-        self.tokenizer_path: Path = (
-            Path(tokenizer_path)
-            if tokenizer_path
-            else Path(__file__).parent.parent.joinpath(
-                "pretrained_tokenizers", self.tokenizer_dir
-            )
-        )
+        # Locate Tokeniser and dataset
+        self.tokenizer_path: Path = Path(tokenizer_path)
+        self.path: Path = Path(path)
+        assert self.tokenizer_path.is_dir()
+        assert self.path.is_file()
 
-        self.data_file: str = "250k_zinc_xyz.txt" if structure_data else "250k_zinc.txt"
-        self.dataset_path: Path = (
-            Path(dataset_path)
-            if dataset_path
-            else Path(__file__).parent.parent.joinpath("raw_data", self.data_file)
-        )
         self.max_length = max_length
         self.block_size = block_size
         self.mlm_probability = mlm_probability
@@ -52,7 +43,7 @@ class RobertaDataSet(pl.LightningDataModule):
         )
         dataset = LineByLineTextDataset(
             tokenizer=tokenizer,
-            file_path=str(self.dataset_path),
+            file_path=str(self.path),
             block_size=self.block_size,
         )
         self.train_dataset, self.val_dataset, self.test_dataset = random_split(
@@ -72,10 +63,10 @@ class RobertaDataSet(pl.LightningDataModule):
             shuffle=True,
             collate_fn=self.data_collator,
             batch_size=self.batch_size,
-            #num_workers=1,
-            #prefetch_factor=4,
-            #pin_memory=True,
-            #persistent_workers=True,
+            # num_workers=1,
+            # prefetch_factor=4,
+            # pin_memory=True,
+            # persistent_workers=True,
         )
 
     def val_dataloader(self):
@@ -83,10 +74,10 @@ class RobertaDataSet(pl.LightningDataModule):
             self.val_dataset,
             collate_fn=self.data_collator,
             batch_size=self.val_batch_size,
-            #num_workers=1,
-            #prefetch_factor=4,
-            #pin_memory=True,
-            #persistent_workers=True,
+            # num_workers=1,
+            # prefetch_factor=4,
+            # pin_memory=True,
+            # persistent_workers=True,
         )
 
     def test_dataset(self):
