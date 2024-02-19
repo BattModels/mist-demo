@@ -1,9 +1,11 @@
 import os
 import torch
+from mpi4py import MPI
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+from pytorch_lightning.profilers import PyTorchProfiler
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 from jsonargparse import lazy_instance
 
@@ -51,5 +53,6 @@ def cli_main():
 
 
 if __name__ == "__main__":
+    MPI.Init()
     seed_everything(42, workers=True)
     cli_main()

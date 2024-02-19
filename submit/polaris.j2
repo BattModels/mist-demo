@@ -50,6 +50,10 @@ export NCCL_DEBUG=WARN
 export NCCL_NET_GDR_LEVEL=PHB
 
 # For applications that internally handle binding MPI/OpenMP processes to GPUs
+{%- if nsys is defined %}
+nsys profile \
+      {{- cliopts( nsys ) | indent }} \
+{%- endif %}
 mpiexec \
     {{- cliopts( mpiexe ) | indent }} \
     ${PBS_O_WORKDIR}/submit/run-polaris.sh \
