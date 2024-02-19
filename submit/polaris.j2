@@ -34,7 +34,7 @@ echo <$PBS_NODEFILE
 # Initialize environment
 module load conda
 conda activate base
-source ${PBS_O_WORKDIR}/.venv/bin/activate
+source ${PBS_O_WORKDIR}/activate
 
 export TOKENIZERS_PARALLELISM=true
 
