@@ -34,7 +34,9 @@ def merge_config(a: dict, b: dict):
         return b
     result = deepcopy(a)
     for k, v in b.items():
-        if k in result and isinstance(v, dict):
+        if k.endswith(":"):
+            result[k[:-1]] = b[k]
+        elif k in result and isinstance(v, dict):
             result[k] = merge_config(result[k], v)
         else:
             result[k] = deepcopy(v)

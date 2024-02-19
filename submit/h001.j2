@@ -5,7 +5,8 @@
 set -e
 
 # Move to git root
-cd $(git rev-parse --show-toplevel)
+export PBS_O_WORKDIR=$(git rev-parse --show-toplevel)
+cd ${PBS_O_WORKDIR}
 
 # Activate Environment
 source activate
@@ -16,6 +17,5 @@ nsys profile \
 {%- endif %}
 mpiexec \
     {{- cliopts( mpiexe ) | indent }} \
-    ${PBS_O_WORKDIR}/submit/run-polaris.sh \
     python3 train.py fit \
     {{- cliopts( train ) | indent }}

@@ -47,12 +47,17 @@ def cli_main():
             "devices": -1,
             "num_nodes": num_nodes or 1,
             "strategy": "deepspeed",
+            "profiler": {
+                "class_path": "pytorch_lightning.profilers.PyTorchProfiler",
+                "init_args": {
+                    "emit_nvtx": True,
+                },
+            },
         },
         save_config_callback=None,
     )
 
 
 if __name__ == "__main__":
-    MPI.Init()
     seed_everything(42, workers=True)
     cli_main()

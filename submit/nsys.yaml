@@ -1,3 +1,6 @@
 nsys:
-  trace: cuda,cudnn,nvtx,mpi
+  trace: cuda,cudnn,cublas,nvtx
   mpi-impl: mpich
+  stats: "true"
+train:
+  "trainer.fast_dev_run": 10

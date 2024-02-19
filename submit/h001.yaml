@@ -1,0 +1,3 @@
+mpiexe::
+  np: 2
+  ppn: 2

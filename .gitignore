@@ -12,3 +12,11 @@ lightning_logs/
 
 # Checkpoints
 *.ckpt/
+
+# NSight
+*.nsys-rep
+*.sqlite
+
+# Spack
+.spack-env/
+spack.lock
