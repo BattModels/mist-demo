@@ -1,4 +1,5 @@
 #!/bin/sh
+{%- from "./cliopts.j2" import cliopts %}
 #PBS -N {{ jobname or "MIST" }}
 #PBS -l select={{ nodes or 1 }}:system=polaris
 #PBS -l place=scatter
@@ -7,8 +8,11 @@
 #PBS -q {{ queue or "debug" }}
 #PBS -A {{ account or "FoundEnergy" }}
 #PBS -k doe
-# set -xe
+#PBS -o ./logs
+#PBS -j oe
+set -e
 cd $PBS_O_WORKDIR
+mkdir --parents %{PBS_O_WORKDIR}/logs
 
 # Internet access on nodes
 export HTTPS_PROXY=http://proxy.alcf.anl.gov:3130
@@ -47,12 +51,7 @@ export NCCL_NET_GDR_LEVEL=PHB
 
 # For applications that internally handle binding MPI/OpenMP processes to GPUs
 mpiexec \
-{% for key,value in (mpiexe or {}).items() %}
-    --{{ key }} {{ value }} \
-{% endfor %}
+    {{- cliopts( mpiexe ) | indent }} \
     ${PBS_O_WORKDIR}/submit/run-polaris.sh \
     python3 train.py fit \
-{% for key,value in (train or {}).items() %}
-    --{{ key }} {{ value}} {% if not loop.last %}\{% endif %}
-
-{% endfor %}
+    {{- cliopts( train ) | indent }}

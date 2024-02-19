@@ -19,6 +19,13 @@ def parse_data(fid, suffix) -> dict:
     return json.load(fid)
 
 
+class RelEnvironment(jinja2.Environment):
+    """Override join_path() to enable relative template paths."""
+
+    def join_path(self, template, parent):
+        return str(Path(parent).parent.joinpath(template))
+
+
 @cli.command()
 def compose(
     file: str = typer.Argument(
@@ -44,11 +51,9 @@ def compose(
     - Use a different config: `./submit/submit.py --data path/to/other/config.yaml submit/polaris.j2`
 
     """
-    env = jinja2.Environment(
+    env = RelEnvironment(
         loader=jinja2.FileSystemLoader(os.getcwd()),
-        trim_blocks=True,
-        autoescape=False,
-        lstrip_blocks=True,
+        lstrip_blocks=False,
     )
     template = env.get_template(file)
 

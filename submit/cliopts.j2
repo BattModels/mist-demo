@@ -1,0 +1,5 @@
+{%- macro cliopts(opts=None) -%}
+{%- for k, v in (opts or {}).items() %}
+{{ "--" if (k|length > 1) else "-"}}{{ k }} {{ v }} {%-  if not loop.last %} \{% endif %}
+{%- endfor %}
+{%- endmacro %}
