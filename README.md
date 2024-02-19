@@ -20,10 +20,13 @@ python -m pipx install --python $(which python) poetry
 
 2. Install environment: `poetry install`
 
+
+3. Fixup NVIDIA libraries: `poetry run fixup_libs`
+
 # Submitting Jobs
 
 ```shell
-poetry shell # Activate Environment
+source activate # Activate Environment
 ./submit/submit.py ./submit/polaris.j2 | qsub
 ```
 

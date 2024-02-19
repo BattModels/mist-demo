@@ -1,0 +1,8 @@
+#!/bin/bash
+# Source this to activate the environment
+
+# Activate virtual environment
+source .venv/bin/activate
+
+# Add NVIDIA libraries
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$(realpath .venv/lib64):$(realpath .venv/lib)"
