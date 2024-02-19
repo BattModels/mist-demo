@@ -7,16 +7,19 @@ import typer
 import os
 import yaml
 import json
+from copy import deepcopy
 from pathlib import Path
+from typing import List
 
 
 cli = typer.Typer(rich_markup_mode="markdown")
 
 
-def parse_data(fid, suffix) -> dict:
-    if suffix in [".yaml", ".yml"]:
-        return yaml.safe_load(fid)
-    return json.load(fid)
+def parse_data(path) -> dict:
+    with open(path, "r") as fid:
+        if path.suffix in [".yaml", ".yml"]:
+            return yaml.safe_load(fid)
+        return json.load(fid)
 
 
 class RelEnvironment(jinja2.Environment):
@@ -26,6 +29,18 @@ class RelEnvironment(jinja2.Environment):
         return str(Path(parent).parent.joinpath(template))
 
 
+def merge_config(a: dict, b: dict):
+    if not isinstance(b, dict):
+        return b
+    result = deepcopy(a)
+    for k, v in b.items():
+        if k in result and isinstance(v, dict):
+            result[k] = merge_config(result[k], v)
+        else:
+            result[k] = deepcopy(v)
+    return result
+
+
 @cli.command()
 def compose(
     file: str = typer.Argument(
@@ -33,12 +48,15 @@ def compose(
         dir_okay=False,
         help="Jinja2 Template to render",
     ),
-    data: str = typer.Option(
-        default=None,
+    data: List[str] = typer.Option(
+        [],
         file_okay=True,
         dir_okay=False,
-        show_default="file with `*.yaml` suffix",
-        help="YAML or JSON file specifying the template's variables",
+        help="YAML or JSON file specifying the template's variables. Multiple files can be provided and will be resolved sequentially",
+    ),
+    default: bool = typer.Option(
+        True,
+        help="Use the default.yaml file next to the template",
     ),
 ):
     """
@@ -48,7 +66,8 @@ def compose(
 
     - Render a Template: `./submit/submit.py submit/polaris.j2`\n
     - Submit on Polaris: `./submit/submit.py submit/polaris.j2 | qsub`\n
-    - Use a different config: `./submit/submit.py --data path/to/other/config.yaml submit/polaris.j2`
+    - Use a different config: `./submit/submit.py --data path/to/other/config.yaml submit/polaris.j2`\n
+    - Stack multiple configs: `./submit/submit.py --data path/to/first.yaml --data path/to/other.yaml`
 
     """
     env = RelEnvironment(
@@ -58,11 +77,17 @@ def compose(
     template = env.get_template(file)
 
     # Load data
-    data = data or Path(file).with_suffix(".yaml")
-    with open(data, "r") as fid:
-        data = parse_data(fid, Path(data).suffix)
+    if default:
+        default_path = Path(file).parent.joinpath("default.yaml")
+        config = parse_data(default_path)
+    else:
+        config = dict()
 
-    print(template.render(data))
+    # Overlay data files
+    for file in data:
+        config = merge_config(config, parse_data(Path(file)))
+
+    print(template.render(config))
 
 
 if __name__ == "__main__":

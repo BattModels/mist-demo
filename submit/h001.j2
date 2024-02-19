@@ -1,0 +1,21 @@
+#!/bin/bash
+{%- from "./cliopts.j2" import cliopts %}
+
+# Training script for h001
+set -e
+
+# Move to git root
+cd $(git rev-parse --show-toplevel)
+
+# Activate Environment
+source activate
+
+{%- if nsys is defined %}
+nsys profile \
+      {{- cliopts( nsys ) | indent }} \
+{%- endif %}
+mpiexec \
+    {{- cliopts( mpiexe ) | indent }} \
+    ${PBS_O_WORKDIR}/submit/run-polaris.sh \
+    python3 train.py fit \
+    {{- cliopts( train ) | indent }}

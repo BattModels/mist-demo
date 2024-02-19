@@ -1,6 +1,3 @@
-nsys:
-  trace: cuda,cudnn,nvtx,mpi
-  mpi-impl: mpich
 mpiexe:
   np: "${NTOTRANKS}"
   ppn: "${NRANKS_PER_NODE}"
