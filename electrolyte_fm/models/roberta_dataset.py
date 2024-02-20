@@ -2,9 +2,8 @@ from os import cpu_count
 from pathlib import Path
 
 import pytorch_lightning as pl
-import torch
-from datasets import Dataset, load_dataset
-from torch.utils.data import DataLoader, random_split
+from datasets import IterableDataset, IterableDatasetDict, load_dataset
+from torch.utils.data import DataLoader
 from transformers import (
     DataCollatorForLanguageModeling,
     RobertaTokenizerFast,
@@ -40,19 +39,14 @@ class RobertaDataSet(pl.LightningDataModule):
     def prepare_data(self):
         self.__load_dataset()
 
-    def __load_dataset(self, num_proc=None):
+    def __load_dataset(self):
         if not hasattr(self, "dataset"):
-            if num_proc is None:
-                num_proc = cpu_count()
-
             dataset = load_dataset(
                 str(self.path),
-                cache_dir=".cache",
-                num_proc=num_proc,
                 keep_in_memory=False,
-                split="train",
+                streaming=True,
             )
-            assert isinstance(dataset, Dataset)
+            assert isinstance(dataset, IterableDatasetDict)
             self.dataset = dataset
 
         return self.dataset
@@ -61,18 +55,14 @@ class RobertaDataSet(pl.LightningDataModule):
         tokenizer = RobertaTokenizerFast.from_pretrained(
             self.tokenizer_path, max_len=self.max_length
         )
-        dataset = self.__load_dataset(num_proc=16)
-        dataset = dataset.with_transform(
-            lambda batch: tokenizer(
-                batch["text"], truncation=True, padding=True, return_tensors="pt"
-            )
+        dataset = self.__load_dataset().map(
+            lambda batch: tokenizer(batch["text"]),
+            batched=True,
+            remove_columns="text",
         )
-        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
-            dataset,
-            lengths=[0.8, 0.1, 0.1],
-            generator=torch.Generator().manual_seed(42),
-        )
-
+        self.train_dataset: IterableDataset = dataset["train"]
+        self.val_dataset = dataset["validation"]
+        self.test_dataset = dataset["test"]
         self.data_collator = DataCollatorForLanguageModeling(
             tokenizer=tokenizer,
             mlm_probability=self.mlm_probability,
@@ -80,9 +70,10 @@ class RobertaDataSet(pl.LightningDataModule):
         )
 
     def train_dataloader(self):
+        # Increment epoch to replicate shuffling
+        ds = self.train_dataset.shuffle(seed=42)
         return DataLoader(
-            self.train_dataset,
-            shuffle=True,
+            ds,
             collate_fn=self.data_collator,
             batch_size=self.batch_size,
             num_workers=4,

@@ -36,6 +36,16 @@ class RoBERTa(pl.LightningModule):
         )
         return out
 
+    def on_train_epoch_start(self) -> None:
+        # Update the dataset's internal epoch counter
+        self.trainer.train_dataloader.dataset.set_epoch(self.trainer.current_epoch)
+        self.log(
+            "train/dataloader_epoch",
+            self.trainer.train_dataloader.dataset._epoch,
+            rank_zero_only=True,
+        )
+        return super().on_train_epoch_start()
+
     def training_step(self, batch, batch_idx: int) -> torch.FloatTensor:
         outputs = self(batch)
         loss = outputs.loss
