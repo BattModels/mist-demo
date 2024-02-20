@@ -1,18 +1,26 @@
-from pathlib import Path
+import typer
+from pyspark import SparkContext
 from pyspark.sql import SparkSession
+from pathlib import Path
 
-spark = SparkSession.builder.master("local").getOrCreate()
+cli = typer.Typer()
 
-dataset_path = Path("realspace")
+spark = SparkSession(SparkContext())
+
 data_split = {
     "train": 0.8,
     "val": 0.1,
     "test": 0.1,
 }
 
-data = spark.read.text("REALSpace_t2")
-for name, split in zip(data_split.keys(), data.randomSplit(data_split.values())):
-    n = max(int(split.count() / 100000), 1)
-    split.repartition(n).write.mode("overwrite").text(
-        str(dataset_path.joinpath("data", name))
-    )
+
+@cli.command()
+def split_data(path: Path, dataset_path: Path):
+    data = spark.read.text(str(path.joinpath("*.txt")))
+    splits = data.randomSplit([x for x in data_split.values()])
+    for name, split in zip(data_split.keys(), splits):
+        split.write.mode("overwrite").text(str(dataset_path.joinpath("data", name)))
+
+
+if __name__ == "__main__":
+    cli()
