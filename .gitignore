@@ -17,6 +17,9 @@ lightning_logs/
 *.nsys-rep
 *.sqlite
 
+# Dataset
+.cache/
+
 # Spack
 .spack-env/
 spack.lock

@@ -16,6 +16,7 @@ wandb = "^0.16.2"
 typer = "^0.9.0"
 h5py = "^3.10.0"
 protobuf = "<=3.20"
+datasets = "^2.17.1"
 
 [[tool.poetry.source]]
 name = "pytorch-cu118"
