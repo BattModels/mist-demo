@@ -1,3 +1,4 @@
+from os import cpu_count
 from pathlib import Path
 
 import pytorch_lightning as pl
@@ -39,12 +40,15 @@ class RobertaDataSet(pl.LightningDataModule):
     def prepare_data(self):
         self.__load_dataset()
 
-    def __load_dataset(self):
+    def __load_dataset(self, num_proc=None):
         if not hasattr(self, "dataset"):
+            if num_proc is None:
+                num_proc = cpu_count()
+
             dataset = load_dataset(
                 str(self.path),
                 cache_dir=".cache",
-                num_proc=8,
+                num_proc=num_proc,
                 keep_in_memory=False,
                 split="train",
             )
@@ -57,7 +61,7 @@ class RobertaDataSet(pl.LightningDataModule):
         tokenizer = RobertaTokenizerFast.from_pretrained(
             self.tokenizer_path, max_len=self.max_length
         )
-        dataset = self.__load_dataset()
+        dataset = self.__load_dataset(num_proc=16)
         dataset = dataset.with_transform(
             lambda batch: tokenizer(
                 batch["text"], truncation=True, padding=True, return_tensors="pt"
