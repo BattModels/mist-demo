@@ -39,6 +39,7 @@ def cli_main():
         logger = None
 
     torch.set_num_threads(8)
+    torch.set_float32_matmul_precision("high")
     MyLightningCLI(
         trainer_defaults={
             "callbacks": callbacks,
