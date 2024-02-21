@@ -3,16 +3,12 @@
 #PBS -N {{ jobname or "MIST" }}
 #PBS -l select={{ nodes or 1 }}:system=polaris
 #PBS -l place=scatter
-#PBS -l filesystems=swift:home
+#PBS -l filesystems=eagle:home
 #PBS -l walltime=0:20:00
 #PBS -q {{ queue or "debug" }}
 #PBS -A {{ account or "FoundEnergy" }}
-#PBS -k doe
-#PBS -o ./logs
-#PBS -j oe
-set -e
-cd $PBS_O_WORKDIR
-mkdir --parents %{PBS_O_WORKDIR}/logs
+set -x
+cd ${PBS_O_WORKDIR}
 
 # Internet access on nodes
 export HTTPS_PROXY=http://proxy.alcf.anl.gov:3130
