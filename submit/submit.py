@@ -60,6 +60,10 @@ def compose(
         True,
         help="Use the default.yaml file next to the template",
     ),
+    script_config: bool = typer.Option(
+        True,
+        help="Apply the *.yaml file next to the template",
+    ),
 ):
     """
     Render a template `file` with using the values from `data`
@@ -84,6 +88,12 @@ def compose(
         config = parse_data(default_path)
     else:
         config = dict()
+
+    # Load host specific config
+    if script_config:
+        script_config_file = Path(file).with_suffix(".yaml")
+        if script_config_file.is_file():
+            config = merge_config(config, parse_data(script_config_file))
 
     # Overlay data files
     for file in data:

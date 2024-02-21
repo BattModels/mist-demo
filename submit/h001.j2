@@ -9,6 +9,7 @@ export PBS_O_WORKDIR=$(git rev-parse --show-toplevel)
 cd ${PBS_O_WORKDIR}
 
 # Activate Environment
+spack env activate .
 source activate
 
 {%- if nsys is defined %}
