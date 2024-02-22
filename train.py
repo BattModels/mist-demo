@@ -1,11 +1,9 @@
 import os
 import torch
-from mpi4py import MPI
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.cli import LightningCLI
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-from pytorch_lightning.profilers import PyTorchProfiler
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 from jsonargparse import lazy_instance
 
@@ -48,6 +46,7 @@ def cli_main():
             "devices": -1,
             "num_nodes": num_nodes or 1,
             "strategy": "deepspeed",
+            "use_distributed_sampler": False,  # Handled by DataModule (Needed as Iterable)
             "profiler": {
                 "class_path": "pytorch_lightning.profilers.PyTorchProfiler",
                 "init_args": {

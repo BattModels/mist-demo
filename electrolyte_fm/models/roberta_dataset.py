@@ -1,8 +1,9 @@
-from os import cpu_count
 from pathlib import Path
 
 import pytorch_lightning as pl
+import datasets
 from datasets import IterableDataset, IterableDatasetDict, load_dataset
+from datasets.distributed import split_dataset_by_node
 from torch.utils.data import DataLoader
 from transformers import (
     DataCollatorForLanguageModeling,
@@ -20,6 +21,8 @@ class RobertaDataSet(pl.LightningDataModule):
         block_size: int = 128,
         batch_size: int = 64,
         val_batch_size=None,
+        num_workers=8,
+        prefetch_factor=4,
     ):
         super().__init__()
 
@@ -34,6 +37,8 @@ class RobertaDataSet(pl.LightningDataModule):
         self.mlm_probability = mlm_probability
         self.batch_size = batch_size
         self.val_batch_size = val_batch_size if val_batch_size else batch_size
+        self.num_workers = num_workers
+        self.prefetch_factor = prefetch_factor
         self.save_hyperparameters()
 
     def prepare_data(self):
@@ -52,32 +57,55 @@ class RobertaDataSet(pl.LightningDataModule):
         return self.dataset
 
     def setup(self, stage: str) -> None:
+        # Load Tokenize and apply to dataset
         tokenizer = RobertaTokenizerFast.from_pretrained(
             self.tokenizer_path, max_len=self.max_length
         )
-        dataset = self.__load_dataset().map(
-            lambda batch: tokenizer(batch["text"]),
-            batched=True,
-            remove_columns="text",
-        )
-        self.train_dataset: IterableDataset = dataset["train"]
-        self.val_dataset = dataset["validation"]
-        self.test_dataset = dataset["test"]
         self.data_collator = DataCollatorForLanguageModeling(
             tokenizer=tokenizer,
             mlm_probability=self.mlm_probability,
             mlm=True,
         )
+        ds = self.__load_dataset().map(
+            lambda batch: tokenizer(batch["text"]),
+            batched=True,
+            remove_columns="text",
+        )
+
+        # Setup to partition datasets over ranks
+        assert self.trainer is not None
+        rank = self.trainer.global_rank
+        world_size = self.trainer.world_size
+        ds_train: IterableDataset = ds["train"].shuffle(seed=42)
+        assert ds_train.n_shards % world_size == 0
+        assert ds["validation"].n_shards % world_size == 0
+        assert ds["test"].n_shards % world_size == 0
+
+        # Partition Datasets
+        self.train_dataset: IterableDataset = split_dataset_by_node(
+            ds_train,
+            rank=rank,
+            world_size=world_size,
+        )
+        self.val_dataset: IterableDataset = split_dataset_by_node(
+            ds["validation"],
+            rank=rank,
+            world_size=world_size,
+        )
+        self.test_dataset: IterableDataset = split_dataset_by_node(
+            ds["test"],
+            rank=rank,
+            world_size=world_size,
+        )
 
     def train_dataloader(self):
         # Increment epoch to replicate shuffling
-        ds = self.train_dataset.shuffle(seed=42)
         return DataLoader(
-            ds,
+            self.train_dataset,
             collate_fn=self.data_collator,
             batch_size=self.batch_size,
-            num_workers=4,
-            prefetch_factor=2,
+            num_workers=self.num_workers,
+            prefetch_factor=self.prefetch_factor,
             pin_memory=True,
             persistent_workers=True,
         )
@@ -87,8 +115,8 @@ class RobertaDataSet(pl.LightningDataModule):
             self.val_dataset,
             collate_fn=self.data_collator,
             batch_size=self.val_batch_size,
-            num_workers=4,
-            prefetch_factor=4,
+            num_workers=self.num_workers,
+            prefetch_factor=self.prefetch_factor,
             pin_memory=True,
             persistent_workers=True,
         )
@@ -98,4 +126,6 @@ class RobertaDataSet(pl.LightningDataModule):
             self.test_dataset,
             collate_fn=self.data_collator,
             batch_size=self.val_batch_size,
+            num_workers=self.num_workers,
+            prefetch_factor=self.prefetch_factor,
         )
