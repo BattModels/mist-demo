@@ -1,11 +1,13 @@
-from datasets import Dataset
-from torch.utils.data import random_split
+#!/usr/bin/env python
+import math
+from pathlib import Path
+
+import numpy as np
 import typer
 from pyspark import SparkContext
-from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as sf
-from pathlib import Path
-import numpy as np
+from torch.utils.data import random_split
 
 cli = typer.Typer()
 
@@ -31,12 +33,24 @@ def hashSplit(df, split, mod=10000):
     return splits
 
 
+def coalesec_multiple(df: DataFrame, n: int):
+    n_parts = df.rdd.getNumPartitions()
+    n_parts = int(math.floor(n_parts / n)) * n
+    return df.coalesce(n_parts)
+
+
 @cli.command()
-def split(path: Path, dataset_path: Path):
+def split(
+    path: Path,
+    dataset_path: Path,
+    n: int = typer.Option(4, help="Shard dataset into a multiple of `n`"),
+):
+
     spark = SparkSession(SparkContext())
     data = spark.read.text(str(path.joinpath("*.txt")))
     splits = hashSplit(data, [x for x in data_split.values()])
     for name, split in zip(data_split.keys(), splits):
+        split = coalesec_multiple(split, n)
         split.write.mode("overwrite").text(str(dataset_path.joinpath("data", name)))
 
 
