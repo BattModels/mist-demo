@@ -43,6 +43,7 @@ class RoBERTa(pl.LightningModule):
             "train/dataloader_epoch",
             self.trainer.train_dataloader.dataset._epoch,
             rank_zero_only=True,
+            sync_dist=True,
         )
         return super().on_train_epoch_start()
 
