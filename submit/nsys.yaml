@@ -1,6 +1,6 @@
 nsys:
   trace: cuda,cudnn,cublas,nvtx
   mpi-impl: mpich
-  stats: "true"
+  sampling-period: 16000000
 train:
-  "trainer.fast_dev_run": 10
+  trainer.fast_dev_run: 10
