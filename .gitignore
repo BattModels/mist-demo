@@ -16,6 +16,7 @@ lightning_logs/
 # NSight
 *.nsys-rep
 *.sqlite
+*.qdstrm
 
 # Dataset
 .cache/
