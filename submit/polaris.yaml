@@ -1,0 +1,7 @@
+queue: "debug-scaling"
+nodes: 8
+train:
+  data.path: /eagle/FoundEnergy/realspace
+  trainer.max_epochs: 5
+  trainer.limit_val_batches: 200
+  trainer.limit_train_batches: 200
