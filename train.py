@@ -32,7 +32,7 @@ def cli_main():
     rank = os.environ.get("PMI_RANK")
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
     if rank is not None and int(rank) == 0:
-        logger = lazy_instance(WandbLogger, project="mist")
+        logger = lazy_instance(WandbLogger, project="mist", save_code=True)
     else:
         logger = None
 
