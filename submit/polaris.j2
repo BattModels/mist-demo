@@ -18,17 +18,12 @@ export https_proxy=http://proxy.alcf.anl.gov:3128
 git config --global http.proxy http://proxy.alcf.anl.gov:3128
 echo "Set HTTP_PROXY and to $HTTP_PROXY"
 
-# Set ADDR and PORT for communication
-master_node=$(cat $PBS_NODEFILE | head -1)
-export MASTER_ADDR=$(host $master_node | head -1 | awk '{print $4}')
-export MASTER_PORT=2345
-
 # MPI and OpenMP settings
 NNODES=$(wc -l <$PBS_NODEFILE)
 NRANKS_PER_NODE=4
-NDEPTH=64
+NDEPTH=16
 NTOTRANKS=$((NNODES * NRANKS_PER_NODE))
-echo "NUM_OF_NODES= ${NNODES} TOTAL_NUM_RANKS= ${NTOTRANKS} RANKS_PER_NODE= ${NRANKS_PER_NODE}"
+echo "NUM_OF_NODES= ${NNODES} TOTAL_NUM_RANKS= ${NTOTRANKS} RANKS_PER_NODE= ${NRANKS_PER_NODE} NDEPTH=${NDEPTH}"
 echo <$PBS_NODEFILE
 
 # Initialize environment
@@ -37,9 +32,6 @@ conda activate base
 source ${PBS_O_WORKDIR}/activate
 
 export TOKENIZERS_PARALLELISM=true
-
-# Logging
-echo "$(df -h /local/scratch)"
 
 # NCCL settings
 export NCCL_DEBUG=WARN
@@ -52,6 +44,5 @@ nsys profile \
 {%- endif %}
 mpiexec \
     {{- cliopts( mpiexe ) | indent }} \
-    ${PBS_O_WORKDIR}/submit/run-polaris.sh \
     python3 train.py fit \
     {{- cliopts( train ) | indent }}

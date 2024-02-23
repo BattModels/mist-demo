@@ -28,7 +28,7 @@ class MyLightningCLI(LightningCLI):
 def cli_main():
     callbacks = [ThroughputMonitor(), EarlyStopping(monitor="val/perplexity")]
 
-    num_nodes = os.environ.get("NRANKS")
+    num_nodes = int(os.environ.get("PMI_SIZE"))
     rank = os.environ.get("PMI_RANK")
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
     if rank is not None and int(rank) == 0:
