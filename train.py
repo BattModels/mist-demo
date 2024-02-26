@@ -1,7 +1,7 @@
 import os
 import torch
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.cli import LightningCLI
+from pytorch_lightning.cli import LightningCLI, LightningArgumentParser
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
@@ -22,14 +22,20 @@ class MyLightningCLI(LightningCLI):
             }
         )
 
+    def add_arguments_to_parser(self, parser: LightningArgumentParser) -> None:
+        # Set model vocab_size from the dataset's vocab size
+        parser.link_arguments(
+            "data.vocab_size", "model.vocab_size", apply_on="instantiate"
+        )
 
-def cli_main():
+
+def cli_main(args=None):
     callbacks = [ThroughputMonitor(), EarlyStopping(monitor="val/perplexity")]
 
     num_nodes = int(os.environ.get("NRANKS"))
     rank = int(os.environ.get("PMI_RANK"))
-    os.environ["NODE_RANK"] = str(rank%num_nodes)
-    os.environ["GLOBAL_RANK"] = str(rank%num_nodes)
+    os.environ["NODE_RANK"] = str(rank % num_nodes)
+    os.environ["GLOBAL_RANK"] = str(rank % num_nodes)
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
     if rank is not None and int(rank) == 0:
         logger = lazy_instance(WandbLogger, project="mist", save_code=True)
@@ -38,7 +44,9 @@ def cli_main():
 
     torch.set_num_threads(8)
     torch.set_float32_matmul_precision("high")
-    MyLightningCLI(
+    return MyLightningCLI(
+        model_class=RoBERTa,
+        datamodule_class=RobertaDataSet,
         trainer_defaults={
             "callbacks": callbacks,
             "logger": logger,
@@ -55,6 +63,8 @@ def cli_main():
             },
         },
         save_config_callback=None,
+        args=args,
+        run=args is None,  # support unit testing
     )
 
 
