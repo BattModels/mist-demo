@@ -4,8 +4,6 @@ mpiexe:
   depth: "${NDEPTH}"
   cpu-bind: depth
 train:
-  model: RoBERTa
-  data: RobertaDataSet
   trainer.max_epochs: 5
   trainer.limit_val_batches: 200
   trainer.limit_train_batches: 200
