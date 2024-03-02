@@ -1,0 +1,14 @@
+mpiexe:
+  np: "${NTOTRANKS}"
+  ppn: "${NRANKS_PER_NODE}"
+  depth: "${NDEPTH}"
+  cpu-bind: depth
+train:
+  model: RoBERTa
+  data: RobertaDataSet
+  trainer.max_epochs: 5
+  trainer.limit_val_batches: 200
+  trainer.limit_train_batches: 200
+  data.batch_size: 128
+  data.path: electrolyte_fm/raw_data/250k_zinc.txt
+  data.tokenizer_path: electrolyte_fm/pretrained_tokenizers/ZINC_250k

@@ -9,3 +9,18 @@ lightning_logs/
 # Log files
 *.o*
 *.e*
+
+# Checkpoints
+*.ckpt/
+
+# NSight
+*.nsys-rep
+*.sqlite
+*.qdstrm
+
+# Dataset
+.cache/
+
+# Spack
+.spack-env/
+spack.lock

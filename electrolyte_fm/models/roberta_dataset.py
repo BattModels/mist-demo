@@ -1,11 +1,12 @@
 from pathlib import Path
 
 import pytorch_lightning as pl
-import torch
-from torch.utils.data import DataLoader, random_split
+import datasets
+from datasets import IterableDataset, IterableDatasetDict, load_dataset
+from datasets.distributed import split_dataset_by_node
+from torch.utils.data import DataLoader
 from transformers import (
     DataCollatorForLanguageModeling,
-    LineByLineTextDataset,
     RobertaTokenizerFast,
 )
 
@@ -13,69 +14,100 @@ from transformers import (
 class RobertaDataSet(pl.LightningDataModule):
     def __init__(
         self,
-        tokenizer_path=None,
-        dataset_path=None,
-        structure_data: bool = False,
+        tokenizer_path: str,
+        path: str,
         max_length: int = 512,
         mlm_probability=0.15,
         block_size: int = 128,
         batch_size: int = 64,
         val_batch_size=None,
+        num_workers=8,
+        prefetch_factor=4,
     ):
         super().__init__()
-        self.tokenizer_dir: str = "ZINC_250k_XYZ" if structure_data else "ZINC_250k"
 
-        self.tokenizer_path: Path = (
-            Path(tokenizer_path)
-            if tokenizer_path
-            else Path(__file__).parent.parent.joinpath(
-                "pretrained_tokenizers", self.tokenizer_dir
-            )
-        )
+        # Locate Tokeniser and dataset
+        self.tokenizer_path: Path = Path(tokenizer_path)
+        self.path: Path = Path(path)
+        assert self.tokenizer_path.is_dir()
+        assert self.path.is_dir() or self.path.is_file()
 
-        self.data_file: str = "250k_zinc_xyz.txt" if structure_data else "250k_zinc.txt"
-        self.dataset_path: Path = (
-            Path(dataset_path)
-            if dataset_path
-            else Path(__file__).parent.parent.joinpath("raw_data", self.data_file)
-        )
         self.max_length = max_length
         self.block_size = block_size
         self.mlm_probability = mlm_probability
         self.batch_size = batch_size
         self.val_batch_size = val_batch_size if val_batch_size else batch_size
+        self.num_workers = num_workers
+        self.prefetch_factor = prefetch_factor
         self.save_hyperparameters()
 
-    def setup(self, stage):
+    def prepare_data(self):
+        self.__load_dataset()
+
+    def __load_dataset(self):
+        if not hasattr(self, "dataset"):
+            dataset = load_dataset(
+                str(self.path),
+                keep_in_memory=False,
+                streaming=True,
+            )
+            assert isinstance(dataset, IterableDatasetDict)
+            self.dataset = dataset
+
+        return self.dataset
+
+    def setup(self, stage: str) -> None:
+        # Load Tokenize and apply to dataset
         tokenizer = RobertaTokenizerFast.from_pretrained(
-            str(self.tokenizer_path), max_len=self.max_length
-        )
-        dataset = LineByLineTextDataset(
-            tokenizer=tokenizer,
-            file_path=str(self.dataset_path),
-            block_size=self.block_size,
-        )
-        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
-            dataset,
-            lengths=[0.8, 0.1, 0.1],
-            generator=torch.Generator().manual_seed(42),
+            self.tokenizer_path, max_len=self.max_length
         )
         self.data_collator = DataCollatorForLanguageModeling(
             tokenizer=tokenizer,
             mlm_probability=self.mlm_probability,
             mlm=True,
         )
+        ds = self.__load_dataset().map(
+            lambda batch: tokenizer(batch["text"]),
+            batched=True,
+            remove_columns="text",
+        )
+
+        # Setup to partition datasets over ranks
+        assert self.trainer is not None
+        rank = self.trainer.global_rank
+        world_size = self.trainer.world_size
+        ds_train: IterableDataset = ds["train"].shuffle(seed=42)
+        assert ds_train.n_shards % world_size == 0
+        assert ds["validation"].n_shards % world_size == 0
+        assert ds["test"].n_shards % world_size == 0
+
+        # Partition Datasets
+        self.train_dataset: IterableDataset = split_dataset_by_node(
+            ds_train,
+            rank=rank,
+            world_size=world_size,
+        )
+        self.val_dataset: IterableDataset = split_dataset_by_node(
+            ds["validation"],
+            rank=rank,
+            world_size=world_size,
+        )
+        self.test_dataset: IterableDataset = split_dataset_by_node(
+            ds["test"],
+            rank=rank,
+            world_size=world_size,
+        )
 
     def train_dataloader(self):
+        # Increment epoch to replicate shuffling
         return DataLoader(
             self.train_dataset,
-            shuffle=True,
             collate_fn=self.data_collator,
             batch_size=self.batch_size,
-            #num_workers=1,
-            #prefetch_factor=4,
-            #pin_memory=True,
-            #persistent_workers=True,
+            num_workers=self.num_workers,
+            prefetch_factor=self.prefetch_factor,
+            pin_memory=True,
+            persistent_workers=True,
         )
 
     def val_dataloader(self):
@@ -83,10 +115,10 @@ class RobertaDataSet(pl.LightningDataModule):
             self.val_dataset,
             collate_fn=self.data_collator,
             batch_size=self.val_batch_size,
-            #num_workers=1,
-            #prefetch_factor=4,
-            #pin_memory=True,
-            #persistent_workers=True,
+            num_workers=self.num_workers,
+            prefetch_factor=self.prefetch_factor,
+            pin_memory=True,
+            persistent_workers=True,
         )
 
     def test_dataset(self):
@@ -94,4 +126,6 @@ class RobertaDataSet(pl.LightningDataModule):
             self.test_dataset,
             collate_fn=self.data_collator,
             batch_size=self.val_batch_size,
+            num_workers=self.num_workers,
+            prefetch_factor=self.prefetch_factor,
         )

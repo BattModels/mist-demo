@@ -1,8 +1,0 @@
-pytorch-lightning~=2.0
-jsonargparse[signatures]
-torch~=2.0
-torchvision
-transformers~=4.0
-deepspeed~=0.9
-wandb
-mpi4py
