@@ -12,6 +12,8 @@ lightning_logs/
 
 # Checkpoints
 *.ckpt/
+*.ckpt
+mist/
 
 # NSight
 *.nsys-rep

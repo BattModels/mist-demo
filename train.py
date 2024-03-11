@@ -10,6 +10,7 @@ from jsonargparse import lazy_instance
 # classes passed via cli
 from electrolyte_fm.models.roberta_base import RoBERTa
 from electrolyte_fm.models.roberta_dataset import RobertaDataSet
+from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
 
 
 class MyLightningCLI(LightningCLI):
@@ -62,7 +63,8 @@ def cli_main(args=None):
                 },
             },
         },
-        save_config_callback=None,
+        save_config_callback=SaveConfigWithCkpts,
+        save_config_kwargs={"overwrite": True},
         args=args,
         run=args is None,  # support unit testing
     )
