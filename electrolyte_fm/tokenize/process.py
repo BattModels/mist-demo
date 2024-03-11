@@ -1,14 +1,14 @@
-from datasets import Dataset
-from torch.utils.data import random_split
+#!/usr/bin/env python
+import math
+from pathlib import Path
+
+import numpy as np
 import typer
 from pyspark import SparkContext
-from pyspark.sql import SparkSession
+from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as sf
-from pathlib import Path
-import numpy as np
 
 cli = typer.Typer()
-
 
 data_split = {
     "train": 0.8,
@@ -17,7 +17,7 @@ data_split = {
 }
 
 
-def hashSplit(df, split, mod=10000):
+def hashSplit(df: DataFrame, split: list[float], mod: int = 10000) -> list[DataFrame]:
     norm_weights = mod * np.cumsum(split) / np.sum(split)
     cuttoff = [w * 2 - mod for w in norm_weights]
     idf = df.withColumn("__hash", sf.xxhash64("value") % mod)
@@ -32,11 +32,24 @@ def hashSplit(df, split, mod=10000):
 
 
 @cli.command()
-def split(path: Path, dataset_path: Path):
+def split(
+    path: Path,
+    dataset_path: Path,
+    n: int = typer.Option(1024, help="Shard dataset into n paritions"),
+):
+    print("starting split")
     spark = SparkSession(SparkContext())
+    print("got spark")
     data = spark.read.text(str(path.joinpath("*.txt")))
     splits = hashSplit(data, [x for x in data_split.values()])
     for name, split in zip(data_split.keys(), splits):
+        # Ensure we have exactly n partitions
+        if split.rdd.getNumPartitions() < n:
+            split = split.repartition(n)
+        else:
+            split = split.coalesce(n)
+
+        # Write out dataset
         split.write.mode("overwrite").text(str(dataset_path.joinpath("data", name)))
 
 
@@ -47,18 +60,6 @@ def shard(path: Path, dataset_path: Path):
     data.write.mode("overwrite").text(str(dataset_path.joinpath("data", "raw")))
 
 
-@cli.command()
-def split_files(path: Path):
-    files = [f for f in path.iterdir() if f.suffix.endswith(".txt")]
-    for name, ds in zip(
-        data_split.keys(), random_split(files, [x for x in data_split.values()])
-    ):
-        path.parent.joinpath(name).mkdir(exist_ok=True)
-        for file in ds:
-            dst = path.parent.joinpath(name, file.name)
-            dst.unlink(missing_ok=True)
-            dst.hardlink_to(file)
-
-
 if __name__ == "__main__":
+    print("starting cli")
     cli()
