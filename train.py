@@ -37,10 +37,10 @@ def cli_main(args=None):
     os.environ["NODE_RANK"] = str(rank % num_nodes)
     os.environ["GLOBAL_RANK"] = str(rank % num_nodes)
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
-    if rank is not None and int(rank) == 0:
-        logger = lazy_instance(WandbLogger, project="mist", save_code=True)
-    else:
+    if rank is not None and int(rank) != 0:
         logger = None
+    else:
+        logger = lazy_instance(WandbLogger, project="mist", save_code=True)
 
     torch.set_num_threads(8)
     torch.set_float32_matmul_precision("high")
