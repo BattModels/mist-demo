@@ -22,7 +22,8 @@ echo "Set HTTP_PROXY and to $HTTP_PROXY"
 master_node=$(cat $PBS_NODEFILE | head -1)
 export MASTER_ADDR=$(host $master_node | head -1 | awk '{print $4}')
 export MASTER_PORT=2345
-
+# Enable GPU-MPI (if supported by application)
+export MPICH_GPU_SUPPORT_ENABLED=1
 # MPI and OpenMP settings
 NNODES=$(wc -l <$PBS_NODEFILE)
 NRANKS_PER_NODE=1
@@ -36,7 +37,7 @@ module load conda
 conda activate base
 source ${PBS_O_WORKDIR}/activate
 
-export TOKENIZERS_PARALLELISM=true
+export TOKENIZERS_PARALLELISM=false
 
 # Logging
 echo "$(df -h /local/scratch)"
@@ -44,6 +45,7 @@ echo "$(df -h /local/scratch)"
 # NCCL settings
 export NCCL_DEBUG=WARN
 export NCCL_NET_GDR_LEVEL=PHB
+export NCCL_COLLNET_ENABLE=1
 
 # For applications that internally handle binding MPI/OpenMP processes to GPUs
 {%- if nsys is defined %}
