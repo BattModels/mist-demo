@@ -28,8 +28,10 @@ class MyLightningCLI(LightningCLI):
 def cli_main():
     callbacks = [ThroughputMonitor(), EarlyStopping(monitor="val/perplexity")]
 
-    num_nodes = int(os.environ.get("NNODES"))
-    rank = os.environ.get("PMI_RANK")
+    num_nodes = int(os.environ.get("NRANKS"))
+    rank = int(os.environ.get("PMI_RANK"))
+    os.environ["NODE_RANK"] = str(rank%num_nodes)
+    os.environ["GLOBAL_RANK"] = str(rank%num_nodes)
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
     if rank is not None and int(rank) == 0:
         logger = lazy_instance(WandbLogger, project="mist", save_code=True)
