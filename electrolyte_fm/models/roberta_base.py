@@ -30,7 +30,7 @@ class RoBERTa(pl.LightningModule):
     def forward(self, batch, **kwargs):  # type: ignore[override]
         out = self.model(
             batch["input_ids"],
-            labels=batch["input_ids"],
+            labels=batch["labels"],
             attention_mask=batch["attention_mask"],
             **kwargs,
         )
