@@ -10,7 +10,7 @@ def test_default():
                 "--data.path",
                 fake_data_dir,
                 "--data.tokenizer",
-                "vendor/MoLFormer-XL-both-10pct",
+                "ibm/MoLFormer-XL-both-10pct",
             ]
         )
     assert cli.datamodule.vocab_size == cli.model.vocab_size
