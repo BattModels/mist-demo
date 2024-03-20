@@ -64,7 +64,10 @@ def test_serialize(tokenizer):
     print(config)
     assert config["decoder"] == {"type": "Fuse"}
     assert config["model"]["type"] == "WordLevel"
-    assert config["pre_tokenizer"] == {"type": "SmirkPreTokenizer", 'atomic_component': {'is_smiles': True}}
+    assert config["pre_tokenizer"] == {
+        "type": "SmirkPreTokenizer",
+        "atomic_component": {"is_smiles": True},
+    }
 
 
 def test_special(tokenizer):

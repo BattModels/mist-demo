@@ -1,14 +1,18 @@
 use std::collections::HashMap;
 
-use pyo3::{pyclass, pymethods, PyResult, Python};
-use pyo3::types::{PyAny, PyString};
-use tokenizers::models::wordlevel::WordLevel;
-use tokenizers::decoders::fuse::Fuse;
-use tokenizers::normalizers::Strip;
-use tokenizers;
-use tokenizers::{AddedToken, EncodeInput, OffsetReferential, OffsetType, PaddingDirection, PaddingParams, PaddingStrategy, PostProcessorWrapper, PreTokenizedString, PreTokenizer, TokenizerBuilder, TokenizerImpl};
+use crate::pretokenizer::SmirkPreTokenizer;
 use dict_derive::{FromPyObject, IntoPyObject};
-use crate::pretokenizer::{AtomicComponent, SmirkPreTokenizer};
+use pyo3::types::{PyAny, PyString};
+use pyo3::{pyclass, pymethods, PyResult, Python};
+use tokenizers;
+use tokenizers::decoders::fuse::Fuse;
+use tokenizers::models::wordlevel::WordLevel;
+use tokenizers::normalizers::Strip;
+use tokenizers::{
+    AddedToken, EncodeInput, OffsetReferential, OffsetType, PaddingDirection, PaddingParams,
+    PaddingStrategy, PostProcessorWrapper, PreTokenizedString, PreTokenizer, TokenizerBuilder,
+    TokenizerImpl,
+};
 
 #[derive(Clone, Debug, FromPyObject, IntoPyObject)]
 struct SpecialTokenConfig {
@@ -56,22 +60,26 @@ impl Into<Vec<AddedToken>> for SpecialTokenConfig {
             as_added_token(&self.pad_token),
             as_added_token(&self.cls_token),
             as_added_token(&self.mask_token),
-        ].to_vec()
+        ]
+        .to_vec()
     }
 }
 
 #[pyclass]
 pub struct SmirkTokenizer {
-    tokenizer:TokenizerImpl<WordLevel, Strip, SmirkPreTokenizer, PostProcessorWrapper, Fuse>,
-    special_tokens:SpecialTokenConfig,
+    tokenizer: TokenizerImpl<WordLevel, Strip, SmirkPreTokenizer, PostProcessorWrapper, Fuse>,
+    special_tokens: SpecialTokenConfig,
 }
 
 impl SmirkTokenizer {
-    fn from_model(model: WordLevel, special_tokens: Option<SpecialTokenConfig>, is_smiles: bool) -> Self {
-        let component = AtomicComponent {is_smiles: is_smiles};
+    fn from_model(
+        model: WordLevel,
+        special_tokens: Option<SpecialTokenConfig>,
+        is_smiles: bool,
+    ) -> Self {
         let mut tokenizer = TokenizerBuilder::new()
             .with_model(model)
-            .with_pre_tokenizer(Some(SmirkPreTokenizer {atomic_component: component}))
+            .with_pre_tokenizer(Some(SmirkPreTokenizer::new(is_smiles)))
             .with_normalizer(Some(Strip::new(true, true)))
             .with_decoder(Some(Fuse::new()))
             .with_post_processor(None::<PostProcessorWrapper>)
@@ -82,7 +90,10 @@ impl SmirkTokenizer {
         let special_tokens = special_tokens.unwrap_or_default().to_owned();
         let added_tokens: Vec<AddedToken> = special_tokens.clone().into();
         tokenizer.add_special_tokens(&added_tokens);
-        Self { tokenizer, special_tokens}
+        Self {
+            tokenizer,
+            special_tokens,
+        }
     }
 }
 
@@ -99,7 +110,6 @@ impl SmirkTokenizer {
         SmirkTokenizer::from_model(model, Some(special_tokens), is_smiles)
     }
 
-
     #[staticmethod]
     fn from_vocab(file: &str, is_smiles: bool) -> Self {
         let special_tokens = SpecialTokenConfig::default();
@@ -107,18 +117,16 @@ impl SmirkTokenizer {
         SmirkTokenizer::from_model(model, Some(special_tokens), is_smiles)
     }
 
-    fn set_padding(&mut self){
+    fn set_padding(&mut self) {
         let pad_token = &self.special_tokens.pad_token;
-        self.tokenizer.add_special_tokens(&[
-            AddedToken {
-                content: pad_token.to_owned(),
-                single_word: true,
-                lstrip: true,
-                rstrip: true,
-                normalized: true,
-                special: true
-            }
-        ]);
+        self.tokenizer.add_special_tokens(&[AddedToken {
+            content: pad_token.to_owned(),
+            single_word: true,
+            lstrip: true,
+            rstrip: true,
+            normalized: true,
+            special: true,
+        }]);
         let default_pad = PaddingParams::default();
         let padding = match self.tokenizer.get_padding() {
             Some(pad) => pad,
@@ -135,23 +143,32 @@ impl SmirkTokenizer {
     }
 
     #[getter]
-    fn special_tokens(&self) -> SpecialTokenConfig { self.special_tokens.to_owned() }
+    fn special_tokens(&self) -> SpecialTokenConfig {
+        self.special_tokens.to_owned()
+    }
 
-    fn pretokenize(&self, smile: &PyString) -> PyResult<Vec<String>>{
+    fn pretokenize(&self, smile: &PyString) -> PyResult<Vec<String>> {
         let mut pretokenized = PreTokenizedString::from(smile.to_str().unwrap());
-        let _ = self.tokenizer.get_pre_tokenizer().unwrap().pre_tokenize(&mut pretokenized);
-        let splits = pretokenized.get_splits(OffsetReferential::Original, OffsetType::Byte)
+        let _ = self
+            .tokenizer
+            .get_pre_tokenizer()
+            .unwrap()
+            .pre_tokenize(&mut pretokenized);
+        let splits = pretokenized
+            .get_splits(OffsetReferential::Original, OffsetType::Byte)
             .into_iter()
             .map(|(s, _, _)| s.to_string())
-            .collect::<Vec<String>>()
-        ;
+            .collect::<Vec<String>>();
         Ok(splits)
     }
 
     #[pyo3(signature = (smile, add_special_tokens = true))]
-    fn encode(&self, smile: &PyString, add_special_tokens: bool) -> PyResult<Encoding>{
+    fn encode(&self, smile: &PyString, add_special_tokens: bool) -> PyResult<Encoding> {
         let input = EncodeInput::from(smile.to_str().unwrap());
-        let encoding = self.tokenizer.encode_char_offsets(input, add_special_tokens).unwrap();
+        let encoding = self
+            .tokenizer
+            .encode_char_offsets(input, add_special_tokens)
+            .unwrap();
         Ok(Encoding::from(encoding))
     }
 
@@ -161,12 +178,16 @@ impl SmirkTokenizer {
     }
 
     #[pyo3(signature = (examples, add_special_tokens = true))]
-    fn encode_batch(&self, py: Python<'_>, examples: Vec<&PyString>, add_special_tokens: bool) -> PyResult<Vec<Encoding>>{
+    fn encode_batch(
+        &self,
+        py: Python<'_>,
+        examples: Vec<&PyString>,
+        add_special_tokens: bool,
+    ) -> PyResult<Vec<Encoding>> {
         let inputs: Vec<EncodeInput> = examples
             .into_iter()
             .map(|x| EncodeInput::from(x.to_str().unwrap()))
-            .collect()
-        ;
+            .collect();
         // Release the GIL while tokenizing batch
         let out = py.allow_threads(|| {
             self.tokenizer
@@ -180,13 +201,18 @@ impl SmirkTokenizer {
     }
 
     #[pyo3(signature = (ids, skip_special_tokens = true))]
-    fn decode_batch(&self, py: Python<'_>, ids: Vec<Vec<u32>>, skip_special_tokens: bool) -> PyResult<Vec<String>> {
+    fn decode_batch(
+        &self,
+        py: Python<'_>,
+        ids: Vec<Vec<u32>>,
+        skip_special_tokens: bool,
+    ) -> PyResult<Vec<String>> {
         py.allow_threads(|| {
             let sequences = ids.iter().map(|x| &x[..]).collect::<Vec<&[u32]>>();
-            Ok(self.tokenizer
+            Ok(self
+                .tokenizer
                 .decode_batch(&sequences, skip_special_tokens)
-                .unwrap()
-            )
+                .unwrap())
         })
     }
 
@@ -210,7 +236,7 @@ impl SmirkTokenizer {
             Ok(s) => {
                 self.tokenizer = serde_json::from_str(s.as_str()).unwrap();
                 Ok(())
-            },
+            }
             Err(e) => Err(e),
         }
     }

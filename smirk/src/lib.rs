@@ -1,11 +1,11 @@
-mod split_smiles;
-mod split_selfies;
 mod pretokenizer;
+mod split_selfies;
+mod split_smiles;
 mod tokenizer;
 
 use pyo3::{prelude::*, types::PyString};
-use split_smiles::split_chemically_consistent as smiles_split_chemically_consistent;
 use split_selfies::split_chemically_consistent as selfies_split_chemically_consistent;
+use split_smiles::split_chemically_consistent as smiles_split_chemically_consistent;
 use tokenizer::SmirkTokenizer;
 
 #[pyfunction]
