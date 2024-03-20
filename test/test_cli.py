@@ -11,6 +11,7 @@ def test_default():
                 fake_data_dir,
                 "--data.tokenizer",
                 "ibm/MoLFormer-XL-both-10pct",
+                "--trainer.devices=1",
             ]
         )
     assert cli.datamodule.vocab_size == cli.model.vocab_size
