@@ -1,8 +1,13 @@
 import os
 import torch
+from pathlib import Path
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.cli import LightningCLI, LightningArgumentParser
+from pytorch_lightning.cli import (
+    LightningCLI,
+    LightningArgumentParser,
+)
 from pytorch_lightning import seed_everything
+from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 from jsonargparse import lazy_instance
@@ -31,7 +36,16 @@ class MyLightningCLI(LightningCLI):
 
 
 def cli_main(args=None):
-    callbacks = [ThroughputMonitor(), EarlyStopping(monitor="val/perplexity")]
+    monitor = "val/perplexity"
+    callbacks = [
+        ThroughputMonitor(),
+        EarlyStopping(monitor=monitor),
+        ModelCheckpoint(
+            save_last="link",
+            monitor=monitor,
+            save_top_k=5,
+        ),
+    ]
 
     num_nodes = int(os.environ.get("NRANKS"))
     rank = int(os.environ.get("PMI_RANK"))
