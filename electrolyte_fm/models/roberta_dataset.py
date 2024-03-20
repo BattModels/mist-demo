@@ -1,24 +1,22 @@
 from pathlib import Path
 
 import pytorch_lightning as pl
-import datasets
 from datasets import IterableDataset, IterableDatasetDict, load_dataset
 from datasets.distributed import split_dataset_by_node
 from torch.utils.data import DataLoader
 from transformers import (
+    AutoTokenizer,
     DataCollatorForLanguageModeling,
-    RobertaTokenizerFast,
+    PreTrainedTokenizerBase,
 )
 
 
 class RobertaDataSet(pl.LightningDataModule):
     def __init__(
         self,
-        tokenizer_path: str,
         path: str,
-        max_length: int = 512,
+        tokenizer: str,
         mlm_probability=0.15,
-        block_size: int = 128,
         batch_size: int = 64,
         val_batch_size=None,
         num_workers=8,
@@ -27,13 +25,15 @@ class RobertaDataSet(pl.LightningDataModule):
         super().__init__()
 
         # Locate Tokeniser and dataset
-        self.tokenizer_path: Path = Path(tokenizer_path)
+        self.tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
+            tokenizer,
+            trust_remote_code=True,
+            cache_dir=".cache",  # Cache Tokenizer in working directory
+        )
+        self.vocab_size = len(self.tokenizer.get_vocab())
         self.path: Path = Path(path)
-        assert self.tokenizer_path.is_dir()
         assert self.path.is_dir() or self.path.is_file()
 
-        self.max_length = max_length
-        self.block_size = block_size
         self.mlm_probability = mlm_probability
         self.batch_size = batch_size
         self.val_batch_size = val_batch_size if val_batch_size else batch_size
@@ -57,17 +57,13 @@ class RobertaDataSet(pl.LightningDataModule):
         return self.dataset
 
     def setup(self, stage: str) -> None:
-        # Load Tokenize and apply to dataset
-        tokenizer = RobertaTokenizerFast.from_pretrained(
-            self.tokenizer_path, max_len=self.max_length
-        )
         self.data_collator = DataCollatorForLanguageModeling(
-            tokenizer=tokenizer,
+            tokenizer=self.tokenizer,
             mlm_probability=self.mlm_probability,
             mlm=True,
         )
         ds = self.__load_dataset().map(
-            lambda batch: tokenizer(batch["text"]),
+            lambda batch: self.tokenizer(batch["text"]),
             batched=True,
             remove_columns="text",
         )
