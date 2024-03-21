@@ -21,7 +21,7 @@ def test_pad(smile_strings):
 
 def test_collate(smile_strings):
     tokenizer = smirk.SmirkTokenizerFast()
-    collate = DataCollatorForLanguageModeling(tokenizer)
+    collate = DataCollatorForLanguageModeling(tokenizer, mlm_probability=0.5)
     code = tokenizer(smile_strings)
     assert len(code["input_ids"]) == len(smile_strings)
     assert isinstance(code, BatchEncoding)
