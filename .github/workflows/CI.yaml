@@ -16,6 +16,3 @@ jobs:
       - run: poetry install
       - run: poetry run python -m pip install ./smirk  # Explicitly install smirk to ensure it get's built
       - run: source activate && pytest
-    env:
-      NRANKS: 1
-      PMI_RANK: 1
