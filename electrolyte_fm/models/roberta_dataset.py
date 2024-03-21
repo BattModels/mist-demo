@@ -20,7 +20,7 @@ class RobertaDataSet(pl.LightningDataModule):
         mlm_probability=0.15,
         batch_size: int = 64,
         val_batch_size=None,
-        num_workers=8,
+        num_workers=1,
         prefetch_factor=4,
     ):
         super().__init__()
