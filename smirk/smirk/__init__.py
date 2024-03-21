@@ -2,7 +2,7 @@
 from . import smirk as rs_smirk
 from pathlib import Path
 from typing import Union
-from transformers import PreTrainedTokenizerBase
+from transformers import PreTrainedTokenizerBase, BatchEncoding
 from importlib.resources import files
 
 
@@ -31,10 +31,13 @@ class SmirkTokenizerFast(PreTrainedTokenizerBase):
         """Size of the full vocab with added tokens"""
         return self._tokenizer.get_vocab_size(with_added_tokens=True)
 
+    def __repr__(self):
+        return self.__class__.__name__
+
     def is_fast(self):
         return True
 
-    def _batch_decode_plus(self, ids, **kwargs):
+    def batch_decode_plus(self, ids, **kwargs):
         skip_special_tokens = kwargs.pop("skip_special_tokens", True)
         return self._tokenizer.decode_batch(ids)(
             ids, skip_special_tokens=skip_special_tokens
@@ -42,8 +45,13 @@ class SmirkTokenizerFast(PreTrainedTokenizerBase):
 
     def _batch_encode_plus(self, batch_text_or_text_pairs, **kwargs):
         add_special_tokens = kwargs.pop("add_special_tokens", True)
-        return self._tokenizer.encode_batch(
+        encoding = self._tokenizer.encode_batch(
             batch_text_or_text_pairs, add_special_tokens=add_special_tokens
+        )
+        return BatchEncoding(
+            data={k: [dic[k] for dic in encoding] for k in encoding[0]},
+            encoding=encoding,
+            n_sequences=len(encoding),
         )
 
     def _decode(self, token_ids, **kwargs):

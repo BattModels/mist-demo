@@ -1,7 +1,5 @@
 import smirk
-import pytest
-import re
-from collections.abc import Mapping
+from transformers import BatchEncoding
 from transformers.data import DataCollatorForLanguageModeling
 from test_tokenize_smiles import smile_strings
 
@@ -14,26 +12,27 @@ def test_special_tokens():
 
 def test_pad(smile_strings):
     tokenizer = smirk.SmirkTokenizerFast()
-    embed = tokenizer(smile_strings)
-    assert len(embed[0]["input_ids"]) != len(embed[1]["input_ids"])
-    embed = tokenizer.pad(embed)
-    assert len(embed["input_ids"][0]) == len(embed["input_ids"][1])
-    assert len(embed["special_tokens_mask"][0]) == len(embed["special_tokens_mask"][1])
+    code = tokenizer(smile_strings)
+    assert len(code["input_ids"][0]) != len(code["input_ids"][1])
+    code = tokenizer.pad(code)
+    assert len(code["input_ids"][0]) == len(code["input_ids"][1])
+    assert len(code["special_tokens_mask"][0]) == len(code["special_tokens_mask"][1])
 
 
 def test_collate(smile_strings):
     tokenizer = smirk.SmirkTokenizerFast()
     collate = DataCollatorForLanguageModeling(tokenizer)
-    embed = tokenizer(smile_strings)
-    assert len(embed) == len(smile_strings)
-    assert isinstance(embed[0], Mapping)
-    assert "special_tokens_mask" in embed[0].keys()
+    code = tokenizer(smile_strings)
+    assert len(code["input_ids"]) == len(smile_strings)
+    assert isinstance(code, BatchEncoding)
+    assert "special_tokens_mask" in code.keys()
 
     # Collate batch
-    collated_batch = collate(embed)
+    collated_batch = collate(code)
     print(collated_batch)
 
     # Should pad to longest
+    max_length = len(code["input_ids"][1])
     for k in [
         "input_ids",
         "token_type_ids",
@@ -41,10 +40,10 @@ def test_collate(smile_strings):
         "labels",
     ]:
         assert k in collated_batch.keys()
-        assert collated_batch[k].size() == (2, len(embed[1]["input_ids"]))
+        assert collated_batch[k].size() == (2, max_length)
 
     # Check for padding
-    n = len(embed[0]["input_ids"]) - 1
+    n = len(code["input_ids"][0]) - 1
     collated_batch["input_ids"][0, n:] == tokenizer.pad_token_id
 
     # Check decode
