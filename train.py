@@ -3,12 +3,9 @@ import torch
 
 from datetime import timedelta
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.cli import (
-    LightningCLI,
-    LightningArgumentParser,
-)
+from pytorch_lightning.cli import LightningCLI, LightningArgumentParser
 from pytorch_lightning import seed_everything
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 from jsonargparse import lazy_instance
@@ -59,6 +56,7 @@ def cli_main(args=None):
             train_time_interval=timedelta(minutes=30),
             auto_insert_metric_name=False,
         ),
+        LearningRateMonitor("step"),
     ]
 
     num_nodes = int(os.environ.get("NRANKS", 1))
