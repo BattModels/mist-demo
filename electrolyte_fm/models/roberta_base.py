@@ -5,7 +5,7 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning.cli import OptimizerCallable, LRSchedulerCallable
 from transformers import RobertaConfig, RobertaForMaskedLM
-from electrolyte_fm.models.model_utils import DeepSpeedMixin
+from electrolyte_fm.models import DeepSpeedMixin
 class RoBERTa(pl.LightningModule):
     """
     PyTorch Lightning module for RoBERTa model MLM pre-training.
