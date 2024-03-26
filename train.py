@@ -21,13 +21,14 @@ from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
 
 class MyLightningCLI(LightningCLI):
     def before_fit(self):
-        self.trainer.logger.log_hyperparams(
-            {
-                "n_gpus_per_node": self.trainer.num_devices,
-                "n_nodes": self.trainer.num_nodes,
-                "world_size": self.trainer.world_size,
-            }
-        )
+        if logger := self.trainer.logger:
+            logger.log_hyperparams(
+                {
+                    "n_gpus_per_node": self.trainer.num_devices,
+                    "n_nodes": self.trainer.num_nodes,
+                    "world_size": self.trainer.world_size,
+                }
+            )
 
     def add_arguments_to_parser(self, parser: LightningArgumentParser) -> None:
         # Set model vocab_size from the dataset's vocab size
