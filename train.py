@@ -6,7 +6,6 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.cli import LightningCLI, LightningArgumentParser
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 from jsonargparse import lazy_instance
 
