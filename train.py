@@ -38,7 +38,6 @@ def cli_main(args=None):
     monitor = "val/loss_epoch"
     callbacks = [
         ThroughputMonitor(),
-        EarlyStopping(monitor=monitor),
         ModelCheckpoint(
             save_last="link",
             filename="epoch={epoch}-step={step}-val_loss={" + monitor + ":.2f}",
