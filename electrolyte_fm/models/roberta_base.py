@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from pytorch_lightning.loggers import WandbLogger
 import torch
 import pytorch_lightning as pl
 from pytorch_lightning.cli import OptimizerCallable, LRSchedulerCallable
@@ -50,6 +51,12 @@ class RoBERTa(pl.LightningModule):
             **kwargs,
         )
         return out
+
+    def setup(self, stage: str) -> None:
+        if isinstance(self.logger, WandbLogger):
+            for m in ["train/loss", "val/loss"]:
+                for s in ["_step", "_epoch"]:
+                    self.logger.experiment.define_metric(m + s, summary="min")
 
     def on_train_epoch_start(self) -> None:
         # Update the dataset's internal epoch counter
