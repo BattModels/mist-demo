@@ -82,12 +82,6 @@ def cli_main(args=None):
             "num_nodes": num_nodes or 1,
             "strategy": "deepspeed",
             "use_distributed_sampler": False,  # Handled by DataModule (Needed as Iterable)
-            "profiler": {
-                "class_path": "pytorch_lightning.profilers.PyTorchProfiler",
-                "init_args": {
-                    "emit_nvtx": True,
-                },
-            },
         },
         save_config_callback=SaveConfigWithCkpts,
         save_config_kwargs={"overwrite": True},
