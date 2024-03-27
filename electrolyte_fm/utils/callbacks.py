@@ -31,9 +31,7 @@ class ThroughputMonitor(Callback):
         batch_size: int,
         trainer: "pl.Trainer",
     ):
-        self.macro_batch_size[stage] = (
-            batch_size * trainer.world_size * trainer.num_devices
-        )
+        self.macro_batch_size[stage] = batch_size * trainer.world_size
         trainer.logger.log_hyperparams(
             {f"stats/{stage}_macro_batch_size": self.macro_batch_size[stage]},
         )
