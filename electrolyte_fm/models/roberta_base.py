@@ -5,8 +5,9 @@ import torch
 import pytorch_lightning as pl
 from pytorch_lightning.cli import OptimizerCallable, LRSchedulerCallable
 from transformers import RobertaConfig, RobertaForMaskedLM
-from electrolyte_fm.models import DeepSpeedMixin
-class RoBERTa(pl.LightningModule):
+
+from .model_utils import DeepSpeedMixin, LoggingMixin
+class RoBERTa(DeepSpeedMixin, LoggingMixin):
     """
     PyTorch Lightning module for RoBERTa model MLM pre-training.
     """
@@ -22,6 +23,7 @@ class RoBERTa(pl.LightningModule):
         optimizer: OptimizerCallable = torch.optim.AdamW,
         lr_schedule: LRSchedulerCallable | None = None,
     ) -> None:
+        
         super().__init__()
         self.optimizer = optimizer
         self.lr_schedule = lr_schedule
@@ -109,7 +111,3 @@ class RoBERTa(pl.LightningModule):
                 "lr_scheduler": {"scheduler": schedule(optimizer), "interval": "step"},
             }
         return optimizer
-    
-    @classmethod
-    def load_deepspeed(cls, checkpoint_dir, config_path=None):
-        DeepSpeedMixin.load("roberta", checkpoint_dir, config_path)
