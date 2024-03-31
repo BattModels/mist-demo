@@ -65,7 +65,9 @@ def cli_main(args=None):
     if rank is not None and int(rank) != 0:
         logger = None
     else:
-        logger = lazy_instance(WandbLogger, project="mist", save_code=True)
+        logger = lazy_instance(
+            WandbLogger, project="mist", save_code=True, tags=["pretraining"]
+        )
 
     torch.set_num_threads(8)
     torch.set_float32_matmul_precision("high")
