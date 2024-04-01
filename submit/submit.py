@@ -5,14 +5,21 @@ from __future__ import annotations
 import jinja2
 import typer
 import os
+import sys
+import fcntl
 import yaml
 import json
 from copy import deepcopy
 from pathlib import Path
 from typing import List
-
+import rich
+from rich.json import JSON
+from rich.panel import Panel
+from rich.prompt import Confirm
+from rich.syntax import Syntax
 
 cli = typer.Typer(rich_markup_mode="markdown")
+console = rich.console.Console(stderr=True)
 
 
 def parse_data(path) -> dict:
@@ -43,6 +50,22 @@ def merge_config(a: dict, b: dict):
     return result
 
 
+def fix_o_nonblock():
+    """Unset O_NONBLOCK on stdin so we can read user input from it.
+
+    MPICHv3.1 sets this during run then doesn't unset it afterwards, preventing
+    reads from stdin. Theres a fix for v3.2.1, but Polaris runs v3.1. Instead,
+    just unset this flag before running, we're trying to get user input, stdin
+    **should** block
+
+    Issue: https://github.com/pmodels/mpich/issues/1782
+    Fix: https://github.com/pmodels/mpich/pull/2755
+    """
+    fd = sys.stdin.fileno()
+    flag = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, flag & ~os.O_NONBLOCK)
+
+
 @cli.command()
 def compose(
     file: str = typer.Argument(
@@ -56,6 +79,11 @@ def compose(
         dir_okay=False,
         help="YAML or JSON file specifying the template's variables. Multiple files can be provided and will be resolved sequentially",
     ),
+    json_config: str = typer.Option(
+        "{}",
+        "--json",
+        help="Additional configuration to apply last",
+    ),
     default: bool = typer.Option(
         True,
         help="Use the default.yaml file next to the template",
@@ -63,6 +91,10 @@ def compose(
     script_config: bool = typer.Option(
         True,
         help="Apply the *.yaml file next to the template",
+    ),
+    confirm: bool = typer.Option(
+        __name__ == "__main__",  # Default to asking for confirmation if interactive
+        help="Display configuration and script befor printing",
     ),
 ):
     """
@@ -99,7 +131,35 @@ def compose(
     for file in data:
         config = merge_config(config, parse_data(Path(file)))
 
-    print(template.render(config))
+    # Overlay cli json
+    config = merge_config(config, json.loads(json_config))
+
+    # Generate Script
+    script = template.render(config)
+
+    if not confirm:
+        print(script)
+
+    elif sys.stdin.closed:
+        raise RuntimeError(
+            "STDIN is closed, aborting as unable to ask for confirmation. Use `--no-confirm` to skip confirmation"
+        )
+
+    else:
+        console.print(
+            Panel(
+                JSON(json.dumps(config)),
+                title="Configuration",
+            ),
+            Panel(
+                Syntax(script, "bash", background_color="default"),
+                title="Script",
+            ),
+        )
+
+        fix_o_nonblock()
+        if Confirm.ask("Submit?", console=console):
+            print(script)
 
 
 if __name__ == "__main__":

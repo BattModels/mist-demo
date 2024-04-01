@@ -19,6 +19,7 @@ protobuf = "<=3.20"
 datasets = "^2.17.1"
 pyspark = "^3.5.0"
 smirk = {path = "smirk", develop=true}
+rich = "^13.7.1"
 
 [[tool.poetry.source]]
 name = "pytorch-cu118"
