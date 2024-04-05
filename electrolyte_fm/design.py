@@ -4,7 +4,50 @@ import typer
 import json
 from copy import deepcopy
 
-cli = typer.Typer()
+__doc__ = """
+# Hyperparameter Sweeps for MIST
+
+CLI tool for generating hyperparameter sweeps using design of experiment. All commands
+take the form `python -m electrolye_fm.design CMD OPTS... sweep.yml`, where:
+
+- **CMD**: Is the form of experiment design (See below for options)
+- **OPTS...**: CMD specific flags (See subcommand docs for details)
+- **sweep.yml**: A YAML file describing the parameters to sweep, mapping of swept parameters to configuration and job submission
+
+## Example `sweep.yml`
+```yaml
+config:
+  train:
+    trainer.max_steps: $steps
+    data.tokenizer: $tokenizer
+
+command: python submit/submit.py submit/polaris.j2 ... $json --no-config | bash
+
+space:
+  steps:
+   - 10_000
+   - 20_000
+
+  tokenizer:
+    - smirk
+    - ibm/MoLFormer-XL-both-10pct
+```
+
+> The above YAML doesn't render quite right (https://github.com/tiangolo/typer/issues/447).
+> See the code to get the right spacing
+
+The following describes the `config`, `command` and `space` keys
+
+- **config**: Defines a YAML config identical to the input format of submit/submit.
+    Parameters from `space` will be interpolated using `$varname`
+- **command**: Defines the command that will be generated for each experiment.
+  The contents of `config` will be interpolated into `$json` as a `--json` flag.
+- **space**: Defines a sets of factors and discrete levels for each factor.
+
+"""
+
+# TODO: replace with `help=__doc__` when https://github.com/tiangolo/typer/issues/447 is fixed
+cli = typer.Typer(rich_markup_mode="markdown", help=__doc__.replace("\n", "\n\n"))
 
 
 class HyperSpace:
@@ -36,7 +79,7 @@ class HyperSpace:
 
 
 def interpolate_design(config: dict, design: dict):
-    """Recursively replace values in confing with entries in design"""
+    """Recursively replace values in config with entries in design"""
     out = dict()
     for k, v in config.items():
         if isinstance(v, str) and v.startswith("$"):
@@ -61,7 +104,21 @@ def design_experiment(f, file: typer.FileText):
 
 
 @cli.command()
-def gsd(file: typer.FileText, r: int = typer.Option(3, "--reduce")):
+def gsd(
+    file: typer.FileText,
+    r: int = typer.Option(
+        3,
+        "--reduce",
+        help="Factor by which to reduce the design space by",
+        min=2,
+    ),
+):
+    """
+    Generalized Subset Design: Multi-factor design with varying levels per factor
+
+    See: https://doi.org/10.1021/acs.analchem.7b00506
+    """
+
     def f(levels):
         return pyDOE2.gsd(levels, r)
 
@@ -70,6 +127,8 @@ def gsd(file: typer.FileText, r: int = typer.Option(3, "--reduce")):
 
 @cli.command()
 def fullfact(file: typer.FileText):
+    """Full Factorial Design"""
+
     def f(levels):
         return pyDOE2.fullfact(levels).astype(int).tolist()
 
