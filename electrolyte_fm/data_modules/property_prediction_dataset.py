@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from typing import Optional
 
-import pandas as pd
 import pytorch_lightning as pl
 import torch
 from datasets import load_dataset
