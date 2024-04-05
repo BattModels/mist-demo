@@ -1,9 +1,9 @@
-from pathlib import Path
-from jsonargparse import Namespace
 import json
+from pathlib import Path
 
+from jsonargparse import Namespace
+from pytorch_lightning import Callback, LightningModule, Trainer
 from pytorch_lightning.cli import LightningArgumentParser
-from pytorch_lightning import Trainer, LightningModule, Callback
 
 
 class SaveConfigWithCkpts(Callback):

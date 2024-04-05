@@ -6,8 +6,8 @@ import time
 from typing import Any
 
 import pytorch_lightning as pl
-from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import Callback
+from pytorch_lightning.loggers import WandbLogger
 
 
 class ThroughputMonitor(Callback):
