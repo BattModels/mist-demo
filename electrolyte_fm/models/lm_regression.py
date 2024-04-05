@@ -1,4 +1,5 @@
 import pytorch_lightning as pl
+from pytorch_lightning.cli import OptimizerCallable, LRSchedulerCallable
 import torch
 
 from .model_utils import DeepSpeedMixin
@@ -19,14 +20,18 @@ class LMRegression(pl.LightningModule, DeepSpeedMixin):
         freeze_encoder: bool = False,
         learning_rate: float = 1.6e-4,
         num_targets: int = 1, 
-        dropout: float = 0.2
+        dropout: float = 0.2,
+        optimizer: OptimizerCallable = torch.optim.AdamW, 
+        lr_schedule: LRSchedulerCallable | None = None,
 
     ) -> None:
         super().__init__()
         self.learning_rate = learning_rate
         self.dropout = dropout
         self.encoder_class = encoder_class
-        self.save_hyperparameters()
+        self.optimizer = optimizer
+        self.lr_schedule = lr_schedule
+        self.save_hyperparameters(ignore=["optimizer", "lr_schedule"])
 
         # Expose encoder
         self.encoder = RoBERTa.load(checkpoint_dir= pretrained_checkpoint).model.roberta
@@ -93,8 +98,11 @@ class LMRegression(pl.LightningModule, DeepSpeedMixin):
         learnable_params = [p for _, p in self.task_network.named_parameters()]
         if not self.freeze_encoder:
             learnable_params.extend([p for _, p in self.encoder.named_parameters()])
-        optimizer = torch.optim.AdamW(
-            learnable_params,
-            lr=self.learning_rate,
-        )
+
+        optimizer = self.optimizer(learnable_params)
+        if schedule := self.lr_schedule:
+            return {
+                "optimizer": optimizer,
+                "lr_scheduler": {"scheduler": schedule(optimizer), "interval": "step"},
+            }
         return optimizer
