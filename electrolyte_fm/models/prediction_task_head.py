@@ -1,6 +1,5 @@
 from torch import nn
 
-
 class PredictionTaskHead(nn.Module):
     
     def __init__(

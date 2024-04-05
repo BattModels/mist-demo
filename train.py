@@ -1,12 +1,13 @@
 import os
-import torch
-
 from datetime import timedelta
-from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.cli import LightningCLI, LightningArgumentParser
+
+import torch
+from jsonargparse import lazy_instance
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
-from jsonargparse import lazy_instance
+from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.cli import LightningCLI, LightningArgumentParser
+from electrolyte_fm.utils.callbacks import ThroughputMonitor
 
 # classes passed via cli
 from electrolyte_fm.models.roberta_base import RoBERTa
@@ -15,7 +16,6 @@ from electrolyte_fm.models.lm_classification import LMClassification
 from electrolyte_fm.models.lm_regression import LMRegression
 from electrolyte_fm.models.property_prediction_dataset import \
     PropertyPredictionDataModule
-from electrolyte_fm.utils.callbacks import ThroughputMonitor
 from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
 
 class MyLightningCLI(LightningCLI):
