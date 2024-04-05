@@ -4,13 +4,10 @@ import pytorch_lightning as pl
 from datasets import IterableDataset, IterableDatasetDict, load_dataset
 from datasets.distributed import split_dataset_by_node
 from torch.utils.data import DataLoader
-from transformers import (AutoTokenizer, DataCollatorForLanguageModeling,
-                          PreTrainedTokenizerBase)
+from transformers import DataCollatorForLanguageModeling
 
-from smirk import SmirkTokenizerFast
-
-
-class RobertaDataSet(pl.LightningDataModule):
+from .data_utils import DataSetupMixin
+class RobertaDataSet(pl.LightningDataModule, DataSetupMixin):
     def __init__(
         self,
         path: str,
@@ -23,15 +20,7 @@ class RobertaDataSet(pl.LightningDataModule):
     ):
         super().__init__()
 
-        # Locate Tokeniser and dataset
-        if tokenizer.startswith("smirk"):
-            self.tokenizer = SmirkTokenizerFast(is_smiles=(tokenizer == "smirk"))
-        else:
-            self.tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-                tokenizer,
-                trust_remote_code=True,
-                cache_dir=".cache",  # Cache Tokenizer in working directory
-            )
+        self.setup_tokenizer(tokenizer)
         self.vocab_size = len(self.tokenizer.get_vocab())
         self.path: Path = Path(path)
         assert self.path.is_dir() or self.path.is_file()
