@@ -17,7 +17,7 @@ class RoBERTa(DeepSpeedMixin, LoggingMixin):
 
     def __init__(
         self,
-        vocab_size: int,
+        vocab_size: int = 202,
         intermediate_size: int = 3072,
         max_position_embeddings: int = 512,
         num_attention_heads: int = 12,

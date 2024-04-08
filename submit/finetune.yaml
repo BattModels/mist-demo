@@ -1,10 +1,20 @@
 train::
+  data: PropertyPredictionDataModule
   data.batch_size: 128
-  data.tokenizer: ibm/MoLFormer-XL-both-10pct
+  data.num_workers: 1  # Only have one shard per GPU in realspace_v2_dev\
   data.path: /home/anoushkab/molformer_ft
+  data.tokenizer: ibm/MoLFormer-XL-both-10pct
   data.measure_name: Class
   data.dataset_name: bace
-  model: LMClassification
-  model.num_classes: 2
   data.num_workers: 1
+  model: LMClassification
+  model.encoder_class: RoBERTa
   model.pretrained_checkpoint: /home/anoushkab/electrolyte_fm/mist/azua0s4s/checkpoints/epoch=0-step=10394.ckpt
+  model.num_classes: 2
+  model.optimizer: torch.optim.Adam
+  model.optimizer.lr: 1.6e-4
+  model.optimizer.weight_decay: 0.01
+  model.lr_schedule: electrolyte_fm.utils.lr_schedule.RelativeCosineWarmup
+  model.lr_schedule.num_training_steps: 250000
+  model.lr_schedule.num_warmup_steps: beta2
+  model.lr_schedule.rel_decay: 0.1

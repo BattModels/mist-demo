@@ -23,7 +23,6 @@ class LMRegression(pl.LightningModule, DeepSpeedMixin):
         dropout: float = 0.2,
         optimizer: OptimizerCallable = torch.optim.AdamW, 
         lr_schedule: LRSchedulerCallable | None = None,
-
     ) -> None:
         super().__init__()
         self.learning_rate = learning_rate

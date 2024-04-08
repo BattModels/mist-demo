@@ -2,17 +2,19 @@
 # For Help: submit.py --help
 # NOTE: Must activate environment (`poetry shell`) first
 from __future__ import annotations
-import jinja2
-import typer
+
+import fcntl
+import json
 import os
 import sys
-import fcntl
-import yaml
-import json
 from copy import deepcopy
 from pathlib import Path
 from typing import List
+
+import jinja2
 import rich
+import typer
+import yaml
 from rich.json import JSON
 from rich.panel import Panel
 from rich.prompt import Confirm

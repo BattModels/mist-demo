@@ -16,7 +16,7 @@ class LMClassification(pl.LightningModule, DeepSpeedMixin):
     def __init__(
         self,
         pretrained_checkpoint: str,
-        encoder_class: str = "roberta",
+        encoder_class: pl.LightningModule = RoBERTa,
         freeze_encoder: bool = False,
         learning_rate: float = 1.6e-4,
         num_classes: int = 2, 
@@ -25,13 +25,15 @@ class LMClassification(pl.LightningModule, DeepSpeedMixin):
         lr_schedule: LRSchedulerCallable | None = None,
     ) -> None:
         super().__init__()
+        self.optimizer = optimizer
+        self.lr_schedule = lr_schedule
         self.learning_rate = learning_rate
         self.dropout = dropout
         self.encoder_class = encoder_class
         self.save_hyperparameters()
 
         # Expose encoder
-        self.encoder = RoBERTa.load(checkpoint_dir= pretrained_checkpoint).model.roberta
+        self.encoder = encoder_class.load(checkpoint_dir= pretrained_checkpoint).model.roberta
         self.task_network = PredictionTaskHead(embed_dim=self.encoder.config.hidden_size, 
                                                output_size=num_classes,
                                                dropout=self.dropout)

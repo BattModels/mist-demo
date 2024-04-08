@@ -42,7 +42,8 @@ class SaveConfigWithCkpts(Callback):
 
             # Save model hyperparameters
             with open(Path(config_path, "model_hparams.json"), "w") as fid:
-                json.dump(trainer.lightning_module.hparams, fid)
+                json.dump(trainer.lightning_module.hparams, fid, 
+                          default= lambda x: str(type(x)))
 
             if logger := trainer.logger:
                 logger.log_hyperparams({"cli": self.config.as_dict()})

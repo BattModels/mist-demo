@@ -2,8 +2,7 @@ from torch import nn
 
 
 class PredictionTaskHead(nn.Module):
-    dims = [150, 50, 50, 2]
-
+    
     def __init__(
             self, 
             embed_dim: int, 
