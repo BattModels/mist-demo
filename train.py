@@ -66,6 +66,11 @@ def cli_main(args=None):
         ))
     os.environ["NODE_RANK"] = str(rank % num_nodes)
     os.environ["GLOBAL_RANK"] = str(rank % num_nodes)
+
+    # num_nodes = int(os.environ.get("NRANKS", 1))
+    # rank = int(os.environ.get("PMI_RANK", 1))
+    # os.environ["NODE_RANK"] = str(rank % num_nodes)
+    # os.environ["GLOBAL_RANK"] = str(rank % num_nodes)
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
     if rank is not None and int(rank) != 0:
         logger = None
