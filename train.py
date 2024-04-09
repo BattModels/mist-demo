@@ -12,8 +12,12 @@ from electrolyte_fm.utils.callbacks import ThroughputMonitor
 # classes passed via cli
 from electrolyte_fm.models.roberta_base import RoBERTa
 from electrolyte_fm.models.roberta_dataset import RobertaDataSet
+from electrolyte_fm.data_modules import MultitaskDataModule
+
 from electrolyte_fm.models.lm_classification import LMClassification
 from electrolyte_fm.models.lm_regression import LMRegression
+from electrolyte_fm.models.lm_multitask_classification import \
+    LMMultiTaskClassification
 from electrolyte_fm.models.property_prediction_dataset import \
     PropertyPredictionDataModule
 from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
@@ -33,6 +37,11 @@ class MyLightningCLI(LightningCLI):
         # Set model vocab_size from the dataset's vocab size
         parser.link_arguments(
             "data.vocab_size", "model.init_args.vocab_size", apply_on="instantiate"
+        )
+        # For multi-task learning
+        # Set model task_specs from the dataset's task_specs
+        parser.link_arguments(
+            "data.task_specs", "model.init_args.task_specs", apply_on="instantiate"
         )
 
 
@@ -54,7 +63,7 @@ def cli_main(args=None):
             monitor="step",
             verbose=True,
             mode="max",
-            train_time_interval=timedelta(minutes=30),
+            train_time_interval=timedelta(minutes=5),
             auto_insert_metric_name=False,
         ),
         LearningRateMonitor("step"),
