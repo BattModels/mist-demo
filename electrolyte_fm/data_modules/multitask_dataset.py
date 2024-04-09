@@ -8,10 +8,7 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
-
-# {"measure_name": {"task_type": "regression"}}
-# {"measure_name": {"task_type": "classification", "n_classes": }}
-TaskSpec = Dict[str, Union[str, int]]
+TaskSpecs = List[Dict[str, Union[str, int]]]
 
 
 class MultitaskDataModule(pl.LightningDataModule):
@@ -20,7 +17,7 @@ class MultitaskDataModule(pl.LightningDataModule):
             path: str,
             tokenizer: str,
             dataset_name: str,
-            task_specs: List[TaskSpec],
+            task_specs: TaskSpecs,
             batch_size: int = 64,
             num_workers: int = 1,
             prefetch_factor: int = 4,
@@ -55,7 +52,7 @@ class MultitaskDataModule(pl.LightningDataModule):
         full_dataset = load_dataset(os.path.join(self.path, self.dataset_name))
         self.train_dataset = full_dataset['train']
         self.val_dataset = full_dataset['validation']
-        self.test_dataset = full_dataset['validation']
+        self.test_dataset = full_dataset['test']
 
     def data_collator(self, batch):
         tokens = self.tokenizer(
@@ -64,11 +61,11 @@ class MultitaskDataModule(pl.LightningDataModule):
             return_tensors="pt",
             add_special_tokens=True
             )
-        tokens["targets"] = {
-            measure_name: torch.tensor([
-                sample[measure_name] for sample in batch
-                ]) for measure_name in self.task_specs
-            }
+        
+        for spec in self.task_specs:
+            tokens[spec["measure_name"]] = torch.tensor([
+                sample[spec["measure_name"]] for sample in batch
+                ])
         return tokens
     
     def train_dataloader(self):
