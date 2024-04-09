@@ -1,0 +1,23 @@
+train::
+  data: MultitaskDataModule
+  data.batch_size: 32
+  data.num_workers: 1
+  data.path: /home/anoushkab/molformer_ft
+  data.tokenizer: ibm/MoLFormer-XL-both-10pct
+  data.task_specs: 
+    - measure_name: "FDA_APPROVED"
+      n_classes: 2
+    - measure_name: "CT_TOX"
+      n_classes: 2
+  data.dataset_name: clintox
+  data.num_workers: 1
+  model: LMMultiTaskClassification
+  model.encoder_class: RoBERTa
+  model.pretrained_checkpoint: "/home/anoushkab/electrolyte_fm/mist/3egd5drr/checkpoints/epoch=0-step=9900-val_loss=0.10.ckpt"
+  model.optimizer: torch.optim.AdamW
+  model.optimizer.lr: 3e-5
+  model.optimizer.weight_decay: 0.01
+  model.lr_schedule: electrolyte_fm.utils.lr_schedule.RelativeCosineWarmup
+  model.lr_schedule.num_training_steps: 25000
+  model.lr_schedule.num_warmup_steps: beta2
+  model.lr_schedule.rel_decay: 0.1
