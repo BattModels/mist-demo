@@ -2,20 +2,22 @@ import os
 from pathlib import Path
 from typing import Optional
 
+import pandas as pd
 import pytorch_lightning as pl
 import torch
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
+from .data_utils import DataSetupMixin
 
-class PropertyPredictionDataModule(pl.LightningDataModule):
+class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
     def __init__(
             self, 
             path: str,
             tokenizer: str,
-            dataset_name: str,
-            measure_name: str,
+            dataset_name: str = "bace",
+            measure_name: str = "Class",
             batch_size: int = 64,
             num_workers: int = 1,
             prefetch_factor: int = 4,
@@ -26,11 +28,7 @@ class PropertyPredictionDataModule(pl.LightningDataModule):
     ):
         super().__init__()
 
-        self.tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-            tokenizer,
-            trust_remote_code=True,
-            cache_dir=".cache",  # Cache Tokenizer in working directory
-        )
+        self.setup_tokenizer(tokenizer)
         self.vocab_size = len(self.tokenizer.get_vocab())
         self.path: Path = Path(path)
         assert self.path.is_dir() or self.path.is_file()
