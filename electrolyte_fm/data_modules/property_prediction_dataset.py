@@ -1,23 +1,23 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional, Union
 
-import pandas as pd
 import pytorch_lightning as pl
 import torch
 from datasets import load_dataset
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
-from .data_utils import DataSetupMixin
+TaskSpecs = List[Dict[str, Union[str, int]]]
 
-class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
+
+class MultitaskDataModule(pl.LightningDataModule):
     def __init__(
             self, 
             path: str,
             tokenizer: str,
-            dataset_name: str = "bace",
-            measure_name: str = "Class",
+            dataset_name: str,
+            task_specs: TaskSpecs,
             batch_size: int = 64,
             num_workers: int = 1,
             prefetch_factor: int = 4,
@@ -28,7 +28,11 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
     ):
         super().__init__()
 
-        self.setup_tokenizer(tokenizer)
+        self.tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
+            tokenizer,
+            trust_remote_code=True,
+            cache_dir=".cache",  # Cache Tokenizer in working directory
+        )
         self.vocab_size = len(self.tokenizer.get_vocab())
         self.path: Path = Path(path)
         assert self.path.is_dir() or self.path.is_file()
@@ -37,17 +41,18 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
         self.num_workers = num_workers
         self.prefetch_factor = prefetch_factor
         self.dataset_name = dataset_name
+        self.task_specs = task_specs
         self.train_dataset_length = train_dataset_length
         self.val_dataset_length = val_dataset_length
         self.test_dataset_length = test_dataset_length
-        self.measure_name = measure_name
+        self.task_specs = task_specs
         self.save_hyperparameters()
 
     def setup(self, stage: str) -> None:
         full_dataset = load_dataset(os.path.join(self.path, self.dataset_name))
         self.train_dataset = full_dataset['train']
         self.val_dataset = full_dataset['validation']
-        self.test_dataset = full_dataset['validation']
+        self.test_dataset = full_dataset['test']
 
     def data_collator(self, batch):
         tokens = self.tokenizer(
@@ -56,7 +61,11 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
             return_tensors="pt",
             add_special_tokens=True
             )
-        tokens["targets"] = torch.tensor([sample[self.measure_name] for sample in batch])
+        
+        for spec in self.task_specs:
+            tokens[spec["measure_name"]] = torch.tensor([
+                sample[spec["measure_name"]] for sample in batch
+                ])
         return tokens
     
     def train_dataloader(self):

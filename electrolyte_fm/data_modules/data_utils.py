@@ -3,7 +3,7 @@ from transformers import (AutoTokenizer,
                           PreTrainedTokenizerBase)
 class DataSetupMixin:
 
-    def setup_tokenizer(self, tokenizer):
+    def setup_tokenizer(self, tokenizer: str):
         # Locate Tokeniser and dataset
         if tokenizer.startswith("smirk"):
             self.tokenizer = SmirkTokenizerFast(is_smiles=(tokenizer == "smirk"))

@@ -1,45 +1,70 @@
+from typing import Dict, List, Union
+
 import pytorch_lightning as pl
 from pytorch_lightning.cli import OptimizerCallable, LRSchedulerCallable
 import torch
 
-from .model_utils import DeepSpeedMixin
 from .prediction_task_head import PredictionTaskHead
+from .model_utils import DeepSpeedMixin
 from .roberta_base import RoBERTa
 
+TaskSpecs = List[Dict[str, Union[str, int]]]
 
-class LMClassification(pl.LightningModule, DeepSpeedMixin):
+class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
     """
-    PyTorch Lightning module for finetuning LM encoder model on classification 
-    tasks.
+    PyTorch Lightning module for finetuning LM encoder model on multiple tasks.
     """
 
     def __init__(
         self,
         pretrained_checkpoint: str,
+        task_specs: TaskSpecs, 
         encoder_class: pl.LightningModule = RoBERTa,
         freeze_encoder: bool = False,
         learning_rate: float = 1.6e-4,
-        num_classes: int = 2, 
         dropout: float = 0.2,
         optimizer: OptimizerCallable = torch.optim.AdamW, 
-        lr_schedule: LRSchedulerCallable | None = None,
+        lr_schedule: LRSchedulerCallable | None = None
     ) -> None:
+        
         super().__init__()
-        self.optimizer = optimizer
-        self.lr_schedule = lr_schedule
+
         self.learning_rate = learning_rate
         self.dropout = dropout
         self.encoder_class = encoder_class
-        self.save_hyperparameters()
+        self.task_specs = task_specs
+        self.optimizer = optimizer
+        self.lr_schedule = lr_schedule
 
         # Expose encoder
-        self.encoder = encoder_class.load(checkpoint_dir= pretrained_checkpoint).model.roberta
-        self.task_network = PredictionTaskHead(embed_dim=self.encoder.config.hidden_size, 
-                                               output_size=num_classes,
-                                               dropout=self.dropout)
-        self.loss = torch.nn.CrossEntropyLoss()
+        self.encoder = RoBERTa.load(checkpoint_dir= pretrained_checkpoint).model.roberta
+
+        self.save_hyperparameters()
+
+        head_hyperparams = {
+            "embed_dim": self.encoder.config.hidden_size,
+            "dropout": self.dropout
+        }
+        
+        self.task_networks = torch.nn.ModuleDict(
+            { 
+                spec["measure_name"]: PredictionTaskHead(
+                **head_hyperparams,
+                output_size=spec.get("n_classes", 1)) for spec in self.task_specs
+            }
+        )
+        self.classification_loss = torch.nn.CrossEntropyLoss()
+        self.regression_loss = torch.nn.MSELoss()
+        self.setup_loss_functions()
         self.freeze_encoder = freeze_encoder
     
+    def setup_loss_functions(self):
+        for spec in self.task_specs:
+            if spec.get("n_classes", 1) > 1:
+                spec["loss"] = self.classification_loss
+            else:
+                spec["loss"] = self.regression_loss
+        
     def forward(self, batch, **kwargs):  # type: ignore[override]
         embedding = self.encoder(
             batch["input_ids"],
@@ -49,12 +74,27 @@ class LMClassification(pl.LightningModule, DeepSpeedMixin):
         )
         
         sequence_output = embedding[0]
-        out = self.task_network(sequence_output)
+        out = {
+            spec["measure_name"]: self.task_networks[
+                spec["measure_name"]
+                ](sequence_output)
+            for spec in self.task_specs
+        }
         return out
+    
+    def batch_loss(self, outputs, batch):
+        loss = 0
+        for spec in self.task_specs:
+            target = spec["measure_name"]
+            w = spec.get("loss_weight", 1/len(self.task_specs))
+            loss += w*spec["loss"](outputs[target], batch[target])
+        return loss
+        
 
     def training_step(self, batch, batch_idx: int) -> torch.FloatTensor:
         outputs = self(batch)
-        loss = self.loss(outputs, batch['targets'])
+        loss = self.batch_loss(outputs, batch)
+
         self.log(
             "train/loss",
             loss,
@@ -67,7 +107,8 @@ class LMClassification(pl.LightningModule, DeepSpeedMixin):
 
     def validation_step(self, batch, batch_idx: int) -> torch.FloatTensor:
         outputs = self(batch)
-        loss = self.loss(outputs, batch['targets'])
+        loss = self.batch_loss(outputs, batch)
+
         self.log(
             "val/loss", 
             loss, 
@@ -80,7 +121,8 @@ class LMClassification(pl.LightningModule, DeepSpeedMixin):
 
     def test_step(self, batch, batch_idx: int) -> torch.FloatTensor:
         outputs = self(batch)
-        loss = self.loss(outputs, batch['targets'])
+        loss = self.batch_loss(outputs, batch)
+
         self.log(
             "test/loss",
             loss,
@@ -92,7 +134,9 @@ class LMClassification(pl.LightningModule, DeepSpeedMixin):
         return loss
     
     def configure_optimizers(self):
-        learnable_params = [p for _, p in self.task_network.named_parameters()]
+        learnable_params = [
+            p for _, task_network in self.task_networks.items() for _, p in task_network.named_parameters()
+            ]
         if not self.freeze_encoder:
             learnable_params.extend([p for _, p in self.encoder.named_parameters()])
 

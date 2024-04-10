@@ -12,13 +12,8 @@ from electrolyte_fm.utils.callbacks import ThroughputMonitor
 # classes passed via cli
 from electrolyte_fm.models import RoBERTa
 from electrolyte_fm.data_modules import RobertaDataSet
-from electrolyte_fm.data_modules import MultitaskDataModule
 from electrolyte_fm.data_modules import PropertyPredictionDataModule
-
-from electrolyte_fm.models.lm_classification import LMClassification
-from electrolyte_fm.models.lm_regression import LMRegression
-from electrolyte_fm.models.lm_multitask_classification import \
-    LMMultiTaskClassification
+from electrolyte_fm.models.lm_finetuning import LMFinetuning
 from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
 
 class MyLightningCLI(LightningCLI):
@@ -75,10 +70,6 @@ def cli_main(args=None):
     os.environ["NODE_RANK"] = str(rank % num_nodes)
     os.environ["GLOBAL_RANK"] = str(rank % num_nodes)
 
-    # num_nodes = int(os.environ.get("NRANKS", 1))
-    # rank = int(os.environ.get("PMI_RANK", 1))
-    # os.environ["NODE_RANK"] = str(rank % num_nodes)
-    # os.environ["GLOBAL_RANK"] = str(rank % num_nodes)
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
     if rank is not None and int(rank) != 0:
         logger = None
