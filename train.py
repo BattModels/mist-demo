@@ -32,7 +32,6 @@ class MyLightningCLI(LightningCLI):
         parser.link_arguments(
             "data.vocab_size", "model.init_args.vocab_size", apply_on="instantiate"
         )
-        # For multi-task learning
         # Set model task_specs from the dataset's task_specs
         parser.link_arguments(
             "data.task_specs", "model.init_args.task_specs", apply_on="instantiate"
