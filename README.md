@@ -28,3 +28,13 @@ source activate # Activate Environment
 ```
 
 See `submit/submit.py --help` for more info
+
+# Development
+
+## Pre-commit
+
+We use [pre-commit](https://pre-commit.com) to preform various linting checks on the code. To enable:
+
+1. Install poetry (See above)
+2. Run pre-commit: `pre-commit`
+3. Run before committing: `pre-commit install`
