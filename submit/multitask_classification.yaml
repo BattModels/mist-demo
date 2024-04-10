@@ -1,5 +1,5 @@
 train::
-  data: MultitaskDataModule
+  data: PropertyPredictionDataModule
   data.batch_size: 32
   data.num_workers: 1
   data.path: /home/anoushkab/molformer_ft
@@ -11,7 +11,7 @@ train::
       n_classes: 2
   data.dataset_name: clintox
   data.num_workers: 1
-  model: LMMultiTaskClassification
+  model: LMFinetuning
   model.encoder_class: RoBERTa
   model.pretrained_checkpoint: "/home/anoushkab/electrolyte_fm/mist/3egd5drr/checkpoints/epoch=0-step=9900-val_loss=0.10.ckpt"
   model.optimizer: torch.optim.AdamW

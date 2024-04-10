@@ -87,7 +87,7 @@ def compose(
         help="Additional configuration to apply last",
     ),
     default: bool = typer.Option(
-        True,
+        False,
         help="Use the default.yaml file next to the template",
     ),
     script_config: bool = typer.Option(

@@ -1,3 +1,2 @@
 from .roberta_dataset import RobertaDataSet
-from .multitask_dataset import MultitaskDataModule
 from .property_prediction_dataset import PropertyPredictionDataModule

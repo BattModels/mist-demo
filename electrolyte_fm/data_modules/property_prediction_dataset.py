@@ -6,12 +6,13 @@ import pytorch_lightning as pl
 import torch
 from datasets import load_dataset
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, PreTrainedTokenizerBase
+
+from .data_utils import DataSetupMixin
 
 TaskSpecs = List[Dict[str, Union[str, int]]]
 
 
-class MultitaskDataModule(pl.LightningDataModule):
+class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
     def __init__(
             self, 
             path: str,
@@ -28,11 +29,7 @@ class MultitaskDataModule(pl.LightningDataModule):
     ):
         super().__init__()
 
-        self.tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-            tokenizer,
-            trust_remote_code=True,
-            cache_dir=".cache",  # Cache Tokenizer in working directory
-        )
+        self.setup_tokenizer(tokenizer)
         self.vocab_size = len(self.tokenizer.get_vocab())
         self.path: Path = Path(path)
         assert self.path.is_dir() or self.path.is_file()

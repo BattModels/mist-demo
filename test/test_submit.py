@@ -11,7 +11,7 @@ def test_polaris_default():
 
 def test_data_explicit():
     result = runner.invoke(
-        cli, ["submit/polaris.j2", "--no-default", "--data", "submit/default.yaml"]
+        cli, ["submit/polaris.j2", "--no-default", "--data", "submit/pretrain.yaml"]
     )
     assert result.exit_code == 0
 
@@ -23,7 +23,7 @@ def test_multiple_data():
         [
             "submit/polaris.j2",
             "--data",
-            "submit/default.yaml",
+            "submit/pretrain.yaml",
             "--data",
             "submit/nsys.yaml",
         ],
