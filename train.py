@@ -19,8 +19,6 @@ from electrolyte_fm.models.lm_classification import LMClassification
 from electrolyte_fm.models.lm_regression import LMRegression
 from electrolyte_fm.models.lm_multitask_classification import \
     LMMultiTaskClassification
-from electrolyte_fm.models.property_prediction_dataset import \
-    PropertyPredictionDataModule
 from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
 
 class MyLightningCLI(LightningCLI):
