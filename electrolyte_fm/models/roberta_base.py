@@ -1,7 +1,3 @@
-import json
-from pathlib import Path
-
-import pytorch_lightning as pl
 import torch
 from pytorch_lightning.cli import LRSchedulerCallable, OptimizerCallable
 from pytorch_lightning.loggers import WandbLogger

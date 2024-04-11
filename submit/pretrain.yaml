@@ -1,6 +1,5 @@
-train::
+train:
   data: RobertaDataSet
-  data.path: /home/awadell/realspace_v3_dev/
   data.num_workers: 1  # Only have one shard per GPU in realspace_v2_dev\
   data.batch_size: 64
   data.tokenizer: ibm/MoLFormer-XL-both-10pct
