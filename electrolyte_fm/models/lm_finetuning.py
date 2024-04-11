@@ -135,10 +135,10 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
     
     def configure_optimizers(self):
         learnable_params = [
-            p for _, task_network in self.task_networks.items() for _, p in task_network.named_parameters()
+            p for _, task_network in self.task_networks.items() for p in task_network.parameters()
             ]
         if not self.freeze_encoder:
-            learnable_params.extend([p for _, p in self.encoder.named_parameters()])
+            learnable_params.extend([p for p in self.encoder.parameters()])
 
         optimizer = self.optimizer(learnable_params)
         if schedule := self.lr_schedule:
