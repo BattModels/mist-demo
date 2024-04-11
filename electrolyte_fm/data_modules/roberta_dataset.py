@@ -6,10 +6,10 @@ from datasets.distributed import split_dataset_by_node
 from torch.utils.data import DataLoader
 from transformers import DataCollatorForLanguageModeling
 
-from .data_utils import DataSetupMixin
+from ..utils.tokenizer import load_tokenizer
 
 
-class RobertaDataSet(pl.LightningDataModule, DataSetupMixin):
+class RobertaDataSet(pl.LightningDataModule):
     def __init__(
         self,
         path: str,
@@ -22,8 +22,9 @@ class RobertaDataSet(pl.LightningDataModule, DataSetupMixin):
     ):
         super().__init__()
 
-        self.setup_tokenizer(tokenizer)
-        self.vocab_size = len(self.tokenizer.get_vocab())
+        # Locate Tokeniser and dataset
+        self.tokenizer = load_tokenizer(tokenizer)
+        self.vocab_size = self.tokenizer.vocab_size
         self.path: Path = Path(path)
         assert self.path.is_dir() or self.path.is_file()
 

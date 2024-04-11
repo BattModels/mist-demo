@@ -9,12 +9,12 @@ from datasets import Dataset, load_dataset
 from datasets.distributed import split_dataset_by_node
 from torch.utils.data import DataLoader
 
-from .data_utils import DataSetupMixin
+from ..utils.tokenizer import load_tokenizer
 
 TaskSpecs = List[Dict[str, Union[str, int]]]
 
 
-class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
+class PropertyPredictionDataModule(pl.LightningDataModule):
     def __init__(
         self,
         path: str,
@@ -31,8 +31,8 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
     ):
         super().__init__()
 
-        self.setup_tokenizer(tokenizer)
-        self.vocab_size = len(self.tokenizer.get_vocab())
+        self.tokenizer = load_tokenizer(tokenizer)
+        self.vocab_size = self.tokenizer.vocab_size
         self.path: Path = Path(path)
         assert self.path.is_dir() or self.path.is_file()
         self.batch_size = batch_size
