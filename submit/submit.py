@@ -7,6 +7,7 @@ import fcntl
 import json
 import os
 import sys
+import shlex
 from copy import deepcopy
 from pathlib import Path
 from typing import List
