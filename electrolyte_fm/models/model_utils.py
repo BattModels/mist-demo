@@ -29,6 +29,15 @@ class DeepSpeedMixin:
         state = get_fp32_state_dict_from_zero_checkpoint(checkpoint_dir)
         model.load_state_dict(state, strict=True, assign=True)
         return model
+    
+    @staticmethod
+    def get_encoder(model):
+        raise NotImplementedError
+        
+    @classmethod
+    def load_encoder(cls, checkpoint_dir, config_path=None):
+        model = cls.load(checkpoint_dir, config_path)
+        return cls.get_encoder(model=model)
 
 class LoggingMixin(pl.LightningModule):
     

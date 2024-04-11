@@ -35,9 +35,8 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
         self.task_specs = task_specs
         self.optimizer = optimizer
         self.lr_schedule = lr_schedule
-
         # Expose encoder
-        self.encoder = RoBERTa.load(checkpoint_dir= pretrained_checkpoint).model.roberta
+        self.encoder = encoder_class.load_encoder(checkpoint_dir = pretrained_checkpoint) 
 
         self.save_hyperparameters()
 

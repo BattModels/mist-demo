@@ -10,7 +10,7 @@ from pytorch_lightning.cli import LightningCLI, LightningArgumentParser
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
 
 # classes passed via cli
-from electrolyte_fm.models import RoBERTa
+from electrolyte_fm.models.roberta_base import RoBERTa
 from electrolyte_fm.data_modules import RobertaDataSet
 from electrolyte_fm.data_modules import PropertyPredictionDataModule
 from electrolyte_fm.models.lm_finetuning import LMFinetuning

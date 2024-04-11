@@ -46,6 +46,10 @@ class RoBERTa(DeepSpeedMixin, LoggingMixin):
         )
         self.model = RobertaForMaskedLM(config=self.config)
 
+    @staticmethod
+    def get_encoder(model):
+        return model.model.roberta
+    
     def forward(self, batch, **kwargs):  # type: ignore[override]
         out = self.model(
             batch["input_ids"],
