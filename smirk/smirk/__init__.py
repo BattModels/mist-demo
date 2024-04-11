@@ -62,6 +62,12 @@ class SmirkTokenizerFast(PreTrainedTokenizerBase):
             )
         return batch
 
+    def _encode_plus(
+        self, text: str, add_special_tokens: bool = True, **kwargs
+    ) -> BatchEncoding:
+        encoding = self._tokenizer.encode(text, add_special_tokens=add_special_tokens)
+        return BatchEncoding(data=encoding, encoding=encoding, n_sequences=1)
+
     def _decode(self, token_ids, **kwargs):
         skip_special_tokens = kwargs.get("skip_special_tokens", False)
         return self._tokenizer.decode(

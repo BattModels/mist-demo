@@ -20,6 +20,16 @@ def test_pad(smile_strings):
     assert len(code["special_tokens_mask"][0]) == len(code["special_tokens_mask"][1])
 
 
+def test_encode(smile_strings):
+    tokenizer = smirk.SmirkTokenizerFast()
+    codes = [tokenizer(smile) for smile in smile_strings]
+    for code, smile in zip(codes, smile_strings):
+        assert "input_ids" in code
+        assert "special_tokens_mask" in code
+        assert "attention_mask" in code
+        assert tokenizer.decode(code["input_ids"], skip_special_tokens=True) == smile
+
+
 def test_collate(smile_strings):
     tokenizer = smirk.SmirkTokenizerFast()
     collate = DataCollatorForLanguageModeling(tokenizer, mlm_probability=0.5)
