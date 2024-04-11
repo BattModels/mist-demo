@@ -5,10 +5,12 @@ from transformers import (
     PreTrainedTokenizerBase,
 )
 
+from electrolyte_fm.tokenize.spe import PreTrainedSPETokenizer, pretrained_spe_tokenizer
 from electrolyte_fm.utils.tokenizer import load_tokenizer
 
 SMILE_TOKENIZER = [
     "smirk",
+    "SmilesPE/SPE_ChEMBL",
     "ibm/MoLFormer-XL-both-10pct",
 ]
 
@@ -46,6 +48,8 @@ def test_standard_smiles(smile_tokenizer):
 
 
 def test_compounds_smiles(smile_tokenizer):
+    if isinstance(smile_tokenizer, PreTrainedSPETokenizer):
+        pytest.xfail("Out of vocab for SPETokenizer")
     check_encoding(
         smile_tokenizer,
         [
@@ -72,3 +76,13 @@ def test_mlm_tokenizer(smile_tokenizer):
     ]:
         assert k in collated_batch.keys()
         assert collated_batch[k].size() == (len(STANDARD_SMILES), max_length)
+
+
+def test_spe_setup():
+    tokenizer = pretrained_spe_tokenizer()
+
+    assert isinstance(tokenizer, PreTrainedTokenizerBase)
+    vocab = tokenizer.get_vocab()
+    assert "xxfake" not in vocab
+    assert "[BOS]" in vocab
+    assert "[N+]" in vocab

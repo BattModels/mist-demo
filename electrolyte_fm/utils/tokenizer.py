@@ -14,6 +14,11 @@ def load_tokenizer(name, **kwargs) -> PretrainedTokenizerBase:
 
         raise unk_name
 
+    elif name == "SmilesPE/SPE_ChEMBL":
+        from ..tokenize.spe import pretrained_spe_tokenizer
+
+        return pretrained_spe_tokenizer()
+
     else:
         # Fall back to a HuggingFace Tokenizer
         from transformers import AutoTokenizer
