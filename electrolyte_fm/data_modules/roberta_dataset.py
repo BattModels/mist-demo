@@ -60,7 +60,7 @@ class RobertaDataSet(pl.LightningDataModule, DataSetupMixin):
         )
 
         # Setup to partition datasets over ranks
-        # assert self.trainer is not None
+        assert self.trainer is not None
         rank = self.trainer.global_rank
         world_size = self.trainer.world_size
         ds_train: IterableDataset = ds["train"].shuffle(seed=42)
