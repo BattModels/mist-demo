@@ -28,13 +28,15 @@ class MyLightningCLI(LightningCLI):
             )
 
     def add_arguments_to_parser(self, parser: LightningArgumentParser) -> None:
+
+        # parser.add_class_arguments("model.init_args.encoder_class", instantiate=False)
         # Set model vocab_size from the dataset's vocab size
         parser.link_arguments(
             "data.vocab_size", "model.init_args.vocab_size", apply_on="instantiate"
         )
-        parser.link_arguments(
-            "data.vocab_size", "model.init_args.encoder_class.vocab_size", apply_on="instantiate"
-        )
+        # parser.link_arguments(
+        #     "model.pretrained_checkpoint", "model.init_args.encoder_class.pretrained_checkpoint", apply_on="instantiate"
+        # )
         # Set model task_specs from the dataset's task_specs
         parser.link_arguments(
             "data.task_specs", "model.init_args.task_specs", apply_on="instantiate"
@@ -95,6 +97,7 @@ def cli_main(args=None):
         save_config_callback=SaveConfigWithCkpts,
         save_config_kwargs={"overwrite": True},
         args=args,
+        subclass_mode_model=False,
         run=args is None,  # support unit testing
     )
 

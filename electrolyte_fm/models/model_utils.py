@@ -7,9 +7,8 @@ from deepspeed.utils.zero_to_fp32 import \
 
 
 class DeepSpeedMixin:
-
     @classmethod
-    def load(cls, checkpoint_dir, config_path=None):
+    def load(cls, checkpoint_dir: str, config_path=None):
         """Restore from a deepspeed checkpoint, mainly used for downstream tasks"""
         checkpoint_dir = Path(checkpoint_dir).resolve()
         config_path = config_path or checkpoint_dir.parent.parent.joinpath(
@@ -29,15 +28,12 @@ class DeepSpeedMixin:
         state = get_fp32_state_dict_from_zero_checkpoint(checkpoint_dir)
         model.load_state_dict(state, strict=True, assign=True)
         return model
-    
-    @staticmethod
-    def get_encoder(model):
-        raise NotImplementedError
         
     @classmethod
     def load_encoder(cls, checkpoint_dir, config_path=None):
         model = cls.load(checkpoint_dir, config_path)
-        return cls.get_encoder(model=model)
+        return model.get_encoder()
+        
 
 class LoggingMixin(pl.LightningModule):
     

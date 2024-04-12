@@ -13,7 +13,7 @@ class RoBERTa(DeepSpeedMixin, LoggingMixin):
 
     def __init__(
         self,
-        vocab_size: int = 202,
+        vocab_size: int,
         intermediate_size: int = 3072,
         max_position_embeddings: int = 512,
         num_attention_heads: int = 12,
@@ -22,7 +22,6 @@ class RoBERTa(DeepSpeedMixin, LoggingMixin):
         optimizer: OptimizerCallable = torch.optim.AdamW,
         lr_schedule: LRSchedulerCallable | None = None,
     ) -> None:
-        
         super().__init__()
         self.optimizer = optimizer
         self.lr_schedule = lr_schedule
@@ -42,9 +41,8 @@ class RoBERTa(DeepSpeedMixin, LoggingMixin):
         )
         self.model = RobertaForMaskedLM(config=self.config)
 
-    @staticmethod
-    def get_encoder(model):
-        return model.model.roberta
+    def get_encoder(self):
+        return self.model.roberta
     
     def forward(self, batch, **kwargs):  # type: ignore[override]
         out = self.model(

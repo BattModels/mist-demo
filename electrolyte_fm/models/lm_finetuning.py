@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Callable
 
 import pytorch_lightning as pl
 from pytorch_lightning.cli import OptimizerCallable, LRSchedulerCallable
@@ -17,9 +17,9 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
 
     def __init__(
         self,
-        pretrained_checkpoint: str,
         task_specs: TaskSpecs, 
-        encoder_class: pl.LightningModule = RoBERTa,
+        encoder_class: str,
+        encoder_ckpt: str,
         freeze_encoder: bool = False,
         learning_rate: float = 1.6e-4,
         dropout: float = 0.2,
@@ -31,12 +31,12 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
 
         self.learning_rate = learning_rate
         self.dropout = dropout
-        self.encoder_class = encoder_class
+        self.encoder_ckpt = encoder_ckpt
         self.task_specs = task_specs
         self.optimizer = optimizer
         self.lr_schedule = lr_schedule
         # Expose encoder
-        self.encoder = encoder_class.load_encoder(checkpoint_dir = pretrained_checkpoint) 
+        self.encoder = eval(encoder_class).load_encoder(encoder_ckpt)
 
         self.save_hyperparameters()
 
