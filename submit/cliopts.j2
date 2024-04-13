@@ -1,5 +1,5 @@
 {%- macro cliopts(opts=None) -%}
-{%- for k, v in (opts or {}).items() %}
+{%- for k, v in (opts or {}).items()|sort() %}
 {{ "--" if (k|length > 1) else "-"}}{{ k }} {{ "'" + v|string() + "'" if (v is sequence and v is not string and v is not mapping) else v }} {%-  if not loop.last %} \{% endif %}
 {%- endfor %}
 {%- endmacro %}

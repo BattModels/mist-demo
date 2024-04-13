@@ -129,13 +129,15 @@ def compose(
         script_config_file = Path(file).with_suffix(".yaml")
         if script_config_file.is_file():
             config = merge_config(config, parse_data(script_config_file))
-
+            
     # Overlay data files
     for file in data:
         config = merge_config(config, parse_data(Path(file)))
 
     # Overlay cli json
     config = merge_config(config, json.loads(json_config))
+
+    
 
     # Generate Script
     script = template.render(config)
