@@ -3,6 +3,8 @@ from typing import Dict, List, Union, Callable
 import pytorch_lightning as pl
 from pytorch_lightning.cli import OptimizerCallable, LRSchedulerCallable
 import torch
+from torchmetrics.classification import Accuracy, BinaryAccuracy
+from torchmetrics.regression import MeanAbsoluteError
 
 from .prediction_task_head import PredictionTaskHead
 from .model_utils import DeepSpeedMixin
@@ -52,9 +54,10 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
                 output_size=spec.get("n_classes", 1)) for spec in self.task_specs
             }
         )
-        self.classification_loss = torch.nn.CrossEntropyLoss()
+        self.classification_loss = torch.nn.CrossEntropyLoss(ignore_index=-1)
         self.regression_loss = torch.nn.MSELoss()
         self.setup_loss_functions()
+        self.setup_metrics()
         self.freeze_encoder = freeze_encoder
     
     def setup_loss_functions(self):
@@ -63,7 +66,18 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
                 spec["loss"] = self.classification_loss
             else:
                 spec["loss"] = self.regression_loss
-        
+
+    def setup_metrics(self):
+        for spec in self.task_specs:
+            targets = spec.get("n_classes", 1)
+            if targets == 1: # regression problem
+                spec["metric"] = MeanAbsoluteError().cuda()
+            else: # multi-class classification
+                spec["metric"] = Accuracy(
+                    task="multiclass", 
+                    num_classes=targets,
+                    ignore_index=-1)
+                
     def forward(self, batch, **kwargs):  # type: ignore[override]
         embedding = self.encoder(
             batch["input_ids"],
@@ -86,7 +100,14 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
         for spec in self.task_specs:
             target = spec["measure_name"]
             w = spec.get("loss_weight", 1/len(self.task_specs))
-            loss += w*spec["loss"](outputs[target], batch[target])
+            if spec.get("n_classes", 1) > 1:
+                spec_loss = w*spec["loss"](outputs[target], batch[target].to(torch.int64))
+            else:
+                
+                labels = batch[target].reshape(batch[target].size()[0], 1)
+                spec_loss = w*spec["loss"](outputs[target], labels)
+            if not torch.isnan(spec_loss):
+                loss += spec_loss
         return loss
         
 
@@ -102,6 +123,20 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
             prog_bar=True,
             sync_dist=True,
         )
+
+        for spec in self.task_specs:
+            target = spec['measure_name']
+            labels = batch[target]
+            if labels.dim() < 2:
+                labels =  labels.reshape(labels.size()[0], 1)
+            self.log(
+                f"train/{target}_{spec['metric'].__class__.__name__}",
+                spec["metric"].to(loss.device)(outputs[target],labels),
+                on_step=False,
+                on_epoch=True,
+                prog_bar=True,
+                sync_dist=True,
+            )
         return loss
 
     def validation_step(self, batch, batch_idx: int) -> torch.FloatTensor:
@@ -116,6 +151,21 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
             prog_bar=True, 
             sync_dist=True
         )
+        
+        for spec in self.task_specs:
+            target = spec['measure_name']
+            labels = batch[target]
+            if labels.dim() < 2:
+                labels =  labels.reshape(labels.size()[0], 1)
+
+            self.log(
+                f"val/{target}_{spec['metric'].__class__.__name__}",
+                spec["metric"].to(loss.device)(outputs[target], labels),
+                on_step=False,
+                on_epoch=True,
+                prog_bar=True,
+                sync_dist=True,
+            )
         return loss
 
     def test_step(self, batch, batch_idx: int) -> torch.FloatTensor:
@@ -130,6 +180,20 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
             prog_bar=True,
             sync_dist=True,
         )
+
+        for spec in self.task_specs:
+            target = spec['measure_name']
+            labels = batch[target]
+            if labels.dim() < 2:
+                labels =  labels.reshape(labels.size()[0], 1)
+            self.log(
+                f"val/{target}_{spec['metric'].__class__.__name__}",
+                spec["metric"].to(loss.device)(outputs[target], labels),
+                on_step=False,
+                on_epoch=True,
+                prog_bar=True,
+                sync_dist=True,
+            )
         return loss
     
     def configure_optimizers(self):

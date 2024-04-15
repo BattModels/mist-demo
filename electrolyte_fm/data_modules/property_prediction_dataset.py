@@ -2,9 +2,10 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-import pytorch_lightning as pl
-import torch
 from datasets import load_dataset
+import pytorch_lightning as pl
+from statistics import mean
+import torch
 from torch.utils.data import DataLoader
 
 from .data_utils import DataSetupMixin
@@ -50,6 +51,16 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
         self.train_dataset = full_dataset['train']
         self.val_dataset = full_dataset['validation']
         self.test_dataset = full_dataset['test']
+        self.calculate_imputation_values()
+
+    def calculate_imputation_values(self):
+        for spec in self.task_specs:
+            if spec.get("n_classes", 1) > 1:
+                spec["fill_value"] = -1
+            else:
+                spec["fill_value"] = mean(
+                    d for d in self.train_dataset[spec['measure_name']] if d is not None
+                )
 
     def data_collator(self, batch):
         tokens = self.tokenizer(
@@ -60,15 +71,18 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
             )
         
         for spec in self.task_specs:
-            tokens[spec["measure_name"]] = torch.tensor([
-                sample[spec["measure_name"]] for sample in batch
-                ])
+                tokens[spec["measure_name"]] = torch.tensor([
+                    sample[spec["measure_name"]] or spec["fill_value"] for sample in batch
+                    ])
         return tokens
     
     def train_dataloader(self):
+        sampler = torch.utils.data.DistributedSampler(
+            self.train_dataset, shuffle=True)
         return DataLoader(
             self.train_dataset,
             collate_fn=self.data_collator,
+            sampler=sampler,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             prefetch_factor=self.prefetch_factor,
@@ -77,6 +91,8 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
         )
 
     def val_dataloader(self):
+        sampler = torch.utils.data.DistributedSampler(
+            self.val_dataset, shuffle=False)
         return DataLoader(
             self.val_dataset,
             collate_fn=self.data_collator,
@@ -85,14 +101,18 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
             prefetch_factor=self.prefetch_factor,
             pin_memory=True,
             persistent_workers=True,
-            shuffle=False
+            shuffle=False,
+            sampler=sampler
         )
 
     def test_dataset(self):
+        sampler = torch.utils.data.DistributedSampler(
+            self.val_dataset, shuffle=False)
         return DataLoader(
             self.test_dataset,
             collate_fn=self.data_collator,
             batch_size=self.val_batch_size,
             num_workers=self.num_workers,
             prefetch_factor=self.prefetch_factor,
+            sampler=sampler
         )
