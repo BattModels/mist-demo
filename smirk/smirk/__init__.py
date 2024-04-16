@@ -6,11 +6,6 @@ from transformers import PreTrainedTokenizerBase, BatchEncoding
 from transformers.tokenization_utils_base import SpecialTokensMixin, AddedToken
 from importlib.resources import files
 
-
-VOCAB_FILE = str(Path(__file__).parent.parent.joinpath("vocab_smiles.json"))
-# Expose chemically_consistent_split
-from .smirk import chemically_consistent_split
-
 SPECIAL_TOKENS = {
     "bos_token": "[BOS]",
     "eos_token": "[EOS]",
