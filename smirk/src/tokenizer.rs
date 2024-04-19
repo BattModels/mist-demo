@@ -4,6 +4,8 @@ use crate::pretokenizer::SmirkPreTokenizer;
 use dict_derive::{FromPyObject, IntoPyObject};
 use pyo3::types::{PyAny, PyString};
 use pyo3::{pyclass, pymethods, PyResult, Python};
+use pyo3::types::PyDict;
+
 use tokenizers;
 use tokenizers::decoders::fuse::Fuse;
 use tokenizers::models::wordlevel::WordLevel;
@@ -177,12 +179,13 @@ impl SmirkTokenizer {
         Ok(self.tokenizer.decode(&ids, skip_special_tokens).unwrap())
     }
 
-    #[pyo3(signature = (examples, add_special_tokens = true))]
+    #[pyo3(signature = (examples, add_special_tokens = true, **py_kwargs))]
     fn encode_batch(
         &self,
         py: Python<'_>,
         examples: Vec<&PyString>,
         add_special_tokens: bool,
+        py_kwargs: Option<&PyDict>,
     ) -> PyResult<Vec<Encoding>> {
         let inputs: Vec<EncodeInput> = examples
             .into_iter()

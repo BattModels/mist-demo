@@ -2,7 +2,9 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
+from datasets.distributed import split_dataset_by_node
+
 import pytorch_lightning as pl
 from statistics import mean
 import torch
@@ -47,10 +49,30 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
         self.save_hyperparameters()
 
     def setup(self, stage: str) -> None:
-        full_dataset = load_dataset(os.path.join(self.path, self.dataset_name))
-        self.train_dataset = full_dataset['train']
-        self.val_dataset = full_dataset['validation']
-        self.test_dataset = full_dataset['test']
+
+        ds = load_dataset(os.path.join(self.path, self.dataset_name))
+
+        # Setup to partition datasets over ranks
+        assert self.trainer is not None
+        rank = self.trainer.global_rank or 0
+        world_size = self.trainer.world_size or 1
+        ds_train: Dataset = ds["train"].shuffle(seed=42)
+
+        self.train_dataset: Dataset = split_dataset_by_node(
+            ds_train,
+            rank=rank,
+            world_size=world_size,
+        )
+        self.val_dataset: Dataset = split_dataset_by_node(
+            ds['validation'],
+            rank=rank,
+            world_size=world_size,
+        )
+        self.test_dataset: Dataset = split_dataset_by_node(
+            ds['test'],
+            rank=rank,
+            world_size=world_size,
+        )
         self.calculate_imputation_values()
 
     def calculate_imputation_values(self):
@@ -63,26 +85,23 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
                 )
 
     def data_collator(self, batch):
-        tokens = self.tokenizer(
+        tokens = self.tokenizer._batch_encode_plus(
             [sample['smiles'] for sample in batch], 
-            padding=True, 
+            add_special_tokens=True,
             return_tensors="pt",
-            add_special_tokens=True
+            padding_strategy = "longest"
             )
-        
         for spec in self.task_specs:
                 tokens[spec["measure_name"]] = torch.tensor([
                     sample[spec["measure_name"]] or spec["fill_value"] for sample in batch
                     ])
+        
         return tokens
     
     def train_dataloader(self):
-        sampler = torch.utils.data.DistributedSampler(
-            self.train_dataset, shuffle=True)
         return DataLoader(
             self.train_dataset,
             collate_fn=self.data_collator,
-            sampler=sampler,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             prefetch_factor=self.prefetch_factor,
@@ -91,8 +110,6 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
         )
 
     def val_dataloader(self):
-        sampler = torch.utils.data.DistributedSampler(
-            self.val_dataset, shuffle=False)
         return DataLoader(
             self.val_dataset,
             collate_fn=self.data_collator,
@@ -102,17 +119,13 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
             pin_memory=True,
             persistent_workers=True,
             shuffle=False,
-            sampler=sampler
         )
 
     def test_dataset(self):
-        sampler = torch.utils.data.DistributedSampler(
-            self.val_dataset, shuffle=False)
         return DataLoader(
             self.test_dataset,
             collate_fn=self.data_collator,
             batch_size=self.val_batch_size,
             num_workers=self.num_workers,
             prefetch_factor=self.prefetch_factor,
-            sampler=sampler
         )

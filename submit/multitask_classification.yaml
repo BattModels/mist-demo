@@ -1,4 +1,4 @@
-train::
+train:
   data: PropertyPredictionDataModule
   data.batch_size: 32
   data.num_workers: 1

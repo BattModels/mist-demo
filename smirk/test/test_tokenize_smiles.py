@@ -3,7 +3,7 @@ import pytest
 import json
 from copy import deepcopy
 from importlib.resources import files
-
+from transformers.utils.generic import PaddingStrategy
 
 @pytest.fixture
 def tokenizer():
@@ -38,7 +38,7 @@ def test_image(tokenizer, smile_strings):
         check_encode(tokenizer, x)
 
 
-def test_encode(tokenizer, smile_strings):
+def test_encode(tokenizer):
     smile = "COCCC(=O)N1CCN(C)C(C2=CN([C@@H](C)C3=CC=C(C(F)(F)F)C=C3)N=N2)C1"
     emb = tokenizer.encode(smile)
     smile_out = tokenizer.decode(emb["input_ids"])
@@ -56,6 +56,13 @@ def test_encode_batch(tokenizer, smile_strings):
     assert smile_out == smile_strings
     assert smile_out[0] == smile_strings[0]
     assert smile_out[1] == smile_strings[1]
+
+def test_encode_batch_without_padding(tokenizer, smile_strings):
+    emb = tokenizer._batch_encode_plus(
+            smile_strings,
+            add_special_tokens=True,
+            padding_strategy=PaddingStrategy.DO_NOT_PAD
+        )
 
 
 def test_serialize(tokenizer):
