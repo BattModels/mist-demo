@@ -57,14 +57,6 @@ def test_encode_batch(tokenizer, smile_strings):
     assert smile_out[0] == smile_strings[0]
     assert smile_out[1] == smile_strings[1]
 
-def test_encode_batch_without_padding(tokenizer, smile_strings):
-    emb = tokenizer._batch_encode_plus(
-            smile_strings,
-            add_special_tokens=True,
-            padding_strategy=PaddingStrategy.DO_NOT_PAD
-        )
-
-
 def test_serialize(tokenizer):
     tok = deepcopy(tokenizer)
     config = json.loads(tok.to_str())
