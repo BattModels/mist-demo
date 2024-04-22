@@ -53,9 +53,12 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
         ds = load_dataset(os.path.join(self.path, self.dataset_name))
 
         # Setup to partition datasets over ranks
-        assert self.trainer is not None
-        rank = self.trainer.global_rank or 0
-        world_size = self.trainer.world_size or 1
+        if self.trainer is None:
+            rank = 0
+            world_size = 1
+        else:
+            rank = self.trainer.global_rank
+            world_size = self.trainer.world_size
         ds_train: Dataset = ds["train"].shuffle(seed=42)
 
         self.train_dataset: Dataset = split_dataset_by_node(
