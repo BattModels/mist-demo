@@ -61,7 +61,7 @@ def cli_main(args=None):
             monitor="step",
             verbose=True,
             mode="max",
-            train_time_interval=timedelta(minutes=5),
+            train_time_interval=timedelta(minutes=30),
             auto_insert_metric_name=False,
         ),
         LearningRateMonitor("step"),
