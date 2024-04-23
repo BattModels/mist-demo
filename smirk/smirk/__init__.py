@@ -60,6 +60,7 @@ class SmirkTokenizerFast(PreTrainedTokenizerBase):
                     self,
                     batch,
                     return_tensors= kwargs.pop("return_tensors", "pt"),
+                    **kwargs
                     )
         return batch
 
