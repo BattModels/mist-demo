@@ -3,7 +3,6 @@ import pytest
 import json
 from copy import deepcopy
 from importlib.resources import files
-from transformers.utils.generic import PaddingStrategy
 
 @pytest.fixture
 def tokenizer():
