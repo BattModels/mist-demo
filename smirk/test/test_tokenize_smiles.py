@@ -38,7 +38,7 @@ def test_image(tokenizer, smile_strings):
         check_encode(tokenizer, x)
 
 
-def test_encode(tokenizer):
+def test_encode(tokenizer, smiles):
     smile = "COCCC(=O)N1CCN(C)C(C2=CN([C@@H](C)C3=CC=C(C(F)(F)F)C=C3)N=N2)C1"
     emb = tokenizer.encode(smile)
     smile_out = tokenizer.decode(emb["input_ids"])
