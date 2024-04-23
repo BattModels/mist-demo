@@ -1,3 +1,4 @@
+import pytest
 from submit.submit import cli
 from typer.testing import CliRunner
 
@@ -29,3 +30,22 @@ def test_multiple_data():
         ],
     )
     assert result.exit_code == 0
+
+@pytest.fixture
+def finetuning_configs():
+    return [
+        "submit/finetune.yaml",
+        "submit/multitask_classification.yaml",
+    ]
+
+def test_finetuning(finetuning_configs):
+    for config in finetuning_configs:
+        result = runner.invoke(
+            cli,
+            [
+                "submit/h001.j2",
+                "--data",
+                config
+            ],
+        )
+        assert result.exit_code == 0

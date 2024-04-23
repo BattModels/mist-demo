@@ -37,10 +37,10 @@ class MyLightningCLI(LightningCLI):
         parser.link_arguments(
             "data.task_specs", "model.init_args.task_specs", apply_on="instantiate"
         )
-        # Set WandB tags
-        parser.link_arguments(
-            "logger.tags", "self.trainer.logger.tags", apply_on="instantiate"
-        )
+        # # Set WandB tags
+        # parser.link_arguments(
+        #     "logger.tags", "trainer.logger.init_args.tags", apply_on="instantiate"
+        # )
     
 
 def cli_main(args=None):
@@ -79,7 +79,7 @@ def cli_main(args=None):
         logger = None
     else:
         logger = lazy_instance(
-            WandbLogger, project="mist", save_code=True, tags=["finetuning",]
+            WandbLogger, project="mist", save_code=True
         )
 
     torch.set_num_threads(8)

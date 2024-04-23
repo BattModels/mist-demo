@@ -103,7 +103,6 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
             if spec.get("n_classes", 1) > 1:
                 spec_loss = w*spec["loss"](outputs[target], batch[target].to(torch.int64))
             else:
-                
                 labels = batch[target].reshape(batch[target].size()[0], 1)
                 spec_loss = w*spec["loss"](outputs[target], labels)
             if not torch.isnan(spec_loss):
@@ -127,8 +126,9 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
         for spec in self.task_specs:
             target = spec['measure_name']
             labels = batch[target]
-            if labels.dim() < 2:
+            if spec.get("n_classes", 1) <= 1:
                 labels =  labels.reshape(labels.size()[0], 1)
+
             self.log(
                 f"train/{target}_{spec['metric'].__class__.__name__}",
                 spec["metric"].to(loss.device)(outputs[target],labels),
@@ -155,7 +155,7 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
         for spec in self.task_specs:
             target = spec['measure_name']
             labels = batch[target]
-            if labels.dim() < 2:
+            if spec.get("n_classes", 1) <= 1:
                 labels =  labels.reshape(labels.size()[0], 1)
 
             self.log(
@@ -184,7 +184,7 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
         for spec in self.task_specs:
             target = spec['measure_name']
             labels = batch[target]
-            if labels.dim() < 2:
+            if spec.get("n_classes", 1) <= 1:
                 labels =  labels.reshape(labels.size()[0], 1)
             self.log(
                 f"val/{target}_{spec['metric'].__class__.__name__}",
