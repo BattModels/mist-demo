@@ -10,7 +10,7 @@ train::
       n_classes: 2
   model: LMFinetuning
   model.encoder_class: RoBERTa
-  model.pretrained_checkpoint:
+  model.encoder_ckpt:
   model.optimizer: torch.optim.Adam
   model.optimizer.lr: 1.6e-4
   model.optimizer.weight_decay: 0.01
@@ -18,3 +18,4 @@ train::
   model.lr_schedule.num_training_steps: 250000
   model.lr_schedule.num_warmup_steps: beta2
   model.lr_schedule.rel_decay: 0.1
+  tags: ['finetuning',]

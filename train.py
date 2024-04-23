@@ -16,7 +16,8 @@ from electrolyte_fm.data_modules import PropertyPredictionDataModule
 from electrolyte_fm.models.lm_finetuning import LMFinetuning
 from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
 
-class MyLightningCLI(LightningCLI):
+class MyLightningCLI(LightningCLI):        
+
     def before_fit(self):
         if logger := self.trainer.logger:
             logger.log_hyperparams(
@@ -26,8 +27,11 @@ class MyLightningCLI(LightningCLI):
                     "world_size": self.trainer.world_size,
                 }
             )
+            self.config.fit.trainer.logger.init_args.tags = self.config.fit.tags
 
     def add_arguments_to_parser(self, parser: LightningArgumentParser) -> None:
+
+        parser.add_argument("--tags", type=list, help="Tags for WandB logger", default=["pretraining",])
 
         # Set model vocab_size from the dataset's vocab size
         parser.link_arguments(
@@ -37,10 +41,6 @@ class MyLightningCLI(LightningCLI):
         parser.link_arguments(
             "data.task_specs", "model.init_args.task_specs", apply_on="instantiate"
         )
-        # # Set WandB tags
-        # parser.link_arguments(
-        #     "logger.tags", "trainer.logger.init_args.tags", apply_on="instantiate"
-        # )
     
 
 def cli_main(args=None):
