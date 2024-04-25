@@ -28,7 +28,10 @@ def test_default():
         )
     assert cli.datamodule.vocab_size == cli.model.vocab_size
     assert cli.trainer.logger.__class__ == WandbLogger
-    assert cli.trainer.logger.experiment.tags == (tag,)
+    assert isinstance(cli.trainer.logger, WandbLogger)
+    assert cli.trainer.logger._wandb_init["tags"] == [
+        tag,
+    ]
 
 
 def test_finetune(monkeypatch):
