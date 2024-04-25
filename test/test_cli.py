@@ -1,7 +1,9 @@
+import json
 from tempfile import TemporaryDirectory
+from pathlib import Path
 from random import randint
-
-
+from torch.nn import Module
+from deepspeed.utils import zero_to_fp32
 from pytorch_lightning.loggers import WandbLogger
 
 from train import cli_main
@@ -25,5 +27,44 @@ def test_default():
             ]
         )
     assert cli.datamodule.vocab_size == cli.model.vocab_size
-    assert isinstance(cli.trainer.logger, WandbLogger)
+    assert cli.trainer.logger.__class__ == WandbLogger
     assert cli.trainer.logger.experiment.tags == (tag,)
+
+
+def test_finetune(monkeypatch):
+    with TemporaryDirectory() as fake_data_dir:
+        # Create a fake config
+        ckpt = Path(fake_data_dir).joinpath(
+            "fake-job", "checkpoints", "not-a-real.ckpt"
+        )
+        ckpt.mkdir(parents=True)
+        with open(ckpt.parent.parent.joinpath("config.json"), "w") as fid:
+            json.dump({"data": {"tokenizer": "smirk"}}, fid)
+        with open(ckpt.parent.parent.joinpath("model_hparams.json"), "w") as fid:
+            json.dump(
+                {
+                    "version": "0.2.0",
+                    "class_path": "electrolyte_fm.models.roberta_base.RoBERTa",
+                    "init_args": {"vocab_size": 128},
+                },
+                fid,
+            )
+
+        # Patch out loading so we don't need a real checkpoint
+        monkeypatch.setattr(Module, "load_state_dict", lambda *args, **_: None)
+        monkeypatch.setattr(
+            zero_to_fp32,
+            "get_fp32_state_dict_from_zero_checkpoint",
+            lambda *args, **kwargs: None,
+        )
+
+        cli = cli_main(
+            [
+                "--data=PropertyPredictionDataModule",
+                f"--data.path={fake_data_dir}",
+                "--model=LMFinetuning",
+                f"--model.encoder_ckpt={ckpt}",
+                "--trainer.devices=1",
+            ]
+        )
+        assert str(cli.datamodule.tokenizer.__class__)

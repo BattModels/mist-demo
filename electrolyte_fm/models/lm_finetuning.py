@@ -19,16 +19,15 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
 
     def __init__(
         self,
-        task_specs: TaskSpecs, 
-        encoder_class: str,
         encoder_ckpt: str,
+        task_specs: TaskSpecs,
         freeze_encoder: bool = False,
         learning_rate: float = 1.6e-4,
         dropout: float = 0.2,
-        optimizer: OptimizerCallable = torch.optim.AdamW, 
-        lr_schedule: LRSchedulerCallable | None = None
+        optimizer: OptimizerCallable = torch.optim.AdamW,
+        lr_schedule: LRSchedulerCallable | None = None,
     ) -> None:
-        
+
         super().__init__()
 
         self.learning_rate = learning_rate
@@ -37,21 +36,21 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
         self.task_specs = task_specs
         self.optimizer = optimizer
         self.lr_schedule = lr_schedule
-        # Expose encoder
-        self.encoder = eval(encoder_class).load_encoder(encoder_ckpt)
+        self.encoder = DeepSpeedMixin.load(encoder_ckpt).get_encoder()
 
         self.save_hyperparameters()
 
         head_hyperparams = {
             "embed_dim": self.encoder.config.hidden_size,
-            "dropout": self.dropout
+            "dropout": self.dropout,
         }
-        
+
         self.task_networks = torch.nn.ModuleDict(
-            { 
+            {
                 spec["measure_name"]: PredictionTaskHead(
-                **head_hyperparams,
-                output_size=spec.get("n_classes", 1)) for spec in self.task_specs
+                    **head_hyperparams, output_size=spec.get("n_classes", 1)
+                )
+                for spec in self.task_specs
             }
         )
         self.classification_loss = torch.nn.CrossEntropyLoss(ignore_index=-1)
@@ -59,7 +58,7 @@ class LMFinetuning(pl.LightningModule, DeepSpeedMixin):
         self.setup_loss_functions()
         self.setup_metrics()
         self.freeze_encoder = freeze_encoder
-    
+
     def setup_loss_functions(self):
         for spec in self.task_specs:
             if spec.get("n_classes", 1) > 1:

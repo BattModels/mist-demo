@@ -47,6 +47,13 @@ class MyLightningCLI(LightningCLI):
             "data.task_specs", "model.init_args.task_specs", apply_on="instantiate"
         )
 
+        # Configure tokenizer from checkpoint
+        parser.link_arguments(
+            "model.init_args.encoder_ckpt",
+            "data.init_args.tokenizer",
+            compute_fn=SaveConfigWithCkpts.get_ckpt_tokenizer,
+        )
+
 
 def cli_main(args=None):
     monitor = "val/loss_epoch"
