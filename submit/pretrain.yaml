@@ -7,3 +7,4 @@ train:
   model.optimizer: torch.optim.Adam
   model.optimizer.lr: 1.6e-4
   model.optimizer.weight_decay: 0.01
+  tags: [pretraining]
