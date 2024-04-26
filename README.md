@@ -6,9 +6,9 @@ Benchmarking RoBERTa model pre-training on molecular datasets.
 0. Get python3.10
 
 ## Polaris
-```
-module conda/2023-10-04
-conda base activate
+```shell
+module conda/2024-04-25
+conda activate base
 ```
 
 1. Install poetry + pipx
@@ -19,9 +19,6 @@ python -m pipx install --python $(which python) poetry
 ```
 
 2. Install environment: `poetry install`
-
-
-3. Fixup NVIDIA libraries: `poetry run fixup_libs`
 
 # Submitting Jobs
 

@@ -11,7 +11,7 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-    "transformers ~= 4.37.2",
+    "transformers ~= 4.40",
 ]
 
 [project.optional-dependencies]
