@@ -1,4 +1,5 @@
 mod pre_tokenizers;
+mod gpe;
 mod tokenizer;
 
 use pyo3::prelude::*;
