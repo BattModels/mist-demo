@@ -16,7 +16,8 @@ from electrolyte_fm.data_modules import PropertyPredictionDataModule
 from electrolyte_fm.models.lm_finetuning import LMFinetuning
 from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
 
-class MyLightningCLI(LightningCLI):        
+
+class MyLightningCLI(LightningCLI):
 
     def before_fit(self):
         if logger := self.trainer.logger:
@@ -27,11 +28,15 @@ class MyLightningCLI(LightningCLI):
                     "world_size": self.trainer.world_size,
                 }
             )
-            self.config.fit.trainer.logger.init_args.tags = self.config.fit.tags
 
     def add_arguments_to_parser(self, parser: LightningArgumentParser) -> None:
-
-        parser.add_argument("--tags", type=list, help="Tags for WandB logger", default=["pretraining",])
+        parser.add_argument(
+            "--tags",
+            type=list,
+            help="Tags for WandB logger",
+            default=[],
+        )
+        parser.link_arguments("tags", "trainer.logger.init_args.tags")
 
         # Set model vocab_size from the dataset's vocab size
         parser.link_arguments(
@@ -41,7 +46,14 @@ class MyLightningCLI(LightningCLI):
         parser.link_arguments(
             "data.task_specs", "model.init_args.task_specs", apply_on="instantiate"
         )
-    
+
+        # Configure tokenizer from checkpoint
+        parser.link_arguments(
+            "model.init_args.encoder_ckpt",
+            "data.init_args.tokenizer",
+            compute_fn=SaveConfigWithCkpts.get_ckpt_tokenizer,
+        )
+
 
 def cli_main(args=None):
     monitor = "val/loss_epoch"
@@ -68,9 +80,7 @@ def cli_main(args=None):
     ]
 
     num_nodes = int(os.environ.get("NRANKS", 1))
-    rank = int(os.environ.get(
-        "PMI_RANK", os.environ.get("GLOBAL_RANK", 0)
-        ))
+    rank = int(os.environ.get("PMI_RANK", os.environ.get("GLOBAL_RANK", 0)))
     os.environ["NODE_RANK"] = str(rank % num_nodes)
     os.environ["GLOBAL_RANK"] = str(rank % num_nodes)
 
@@ -78,9 +88,7 @@ def cli_main(args=None):
     if rank is not None and int(rank) != 0:
         logger = None
     else:
-        logger = lazy_instance(
-            WandbLogger, project="mist", save_code=True
-        )
+        logger = lazy_instance(WandbLogger, project="mist", save_code=True)
 
     torch.set_num_threads(8)
     torch.set_float32_matmul_precision("high")

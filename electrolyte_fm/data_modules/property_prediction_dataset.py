@@ -17,18 +17,18 @@ TaskSpecs = List[Dict[str, Union[str, int]]]
 
 class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
     def __init__(
-            self, 
-            path: str,
-            tokenizer: str,
-            dataset_name: str,
-            task_specs: TaskSpecs,
-            batch_size: int = 64,
-            num_workers: int = 1,
-            prefetch_factor: int = 4,
-            val_batch_size: Optional[int] = None,
-            train_dataset_length: Optional[int] = None,
-            val_dataset_length: Optional[int] = None,
-            test_dataset_length: Optional[int] = None,
+        self,
+        path: str,
+        tokenizer: str,
+        dataset_name: str = "brace",
+        task_specs: TaskSpecs = [{"measure_name": "Class", "n_classes": 2}],
+        batch_size: int = 64,
+        num_workers: int = 1,
+        prefetch_factor: int = 4,
+        val_batch_size: Optional[int] = None,
+        train_dataset_length: Optional[int] = None,
+        val_dataset_length: Optional[int] = None,
+        test_dataset_length: Optional[int] = None,
     ):
         super().__init__()
 

@@ -2,41 +2,30 @@ import json
 from pathlib import Path
 
 import pytorch_lightning as pl
-from deepspeed.utils.zero_to_fp32 import \
-    get_fp32_state_dict_from_zero_checkpoint
+from ..utils.ckpt import SaveConfigWithCkpts
 
 
 class DeepSpeedMixin:
-    @classmethod
-    def load(cls, checkpoint_dir: str, config_path=None):
-        """Restore from a deepspeed checkpoint, mainly used for downstream tasks"""
-        checkpoint_dir = Path(checkpoint_dir).resolve()
-        config_path = config_path or checkpoint_dir.parent.parent.joinpath(
-            "model_hparams.json"
-        )
-        assert (
-            checkpoint_dir.is_dir()
-        ), f"Missing deepspeed checkpoint director {checkpoint_dir}"
-        assert config_path.is_file(), f"Missing model config file {config_path}"
+    @staticmethod
+    def load(checkpoint_dir, **kwargs):
+        print(checkpoint_dir)
+        return SaveConfigWithCkpts.load(checkpoint_dir, **kwargs)
 
-        # Restore mode from config
-        with open(config_path, "r") as fid:
-            model_config = json.load(fid)
-        model = cls(**model_config)
+        # config_path = config_path or Path(checkpoint_dir).parent.parent.joinpath(
+        #     "config.json"
+        # )
+        # with open("config_path", "r") as fid:
+        #     config = json.load(fid)
+        #
+        # cls.load(checkpoint_dir, config_path)
+        #
 
-        # Load model weights from checkpoint
-        state = get_fp32_state_dict_from_zero_checkpoint(checkpoint_dir)
-        model.load_state_dict(state, strict=True, assign=True)
-        return model
-        
-    @classmethod
-    def load_encoder(cls, checkpoint_dir, config_path=None):
-        model = cls.load(checkpoint_dir, config_path)
-        return model.get_encoder()
-        
+    def get_encoder(self):
+        raise NotImplmentedError
+
 
 class LoggingMixin(pl.LightningModule):
-    
+
     def on_train_epoch_start(self) -> None:
         # Update the dataset's internal epoch counter
         self.trainer.train_dataloader.dataset.set_epoch(self.trainer.current_epoch)
@@ -47,4 +36,3 @@ class LoggingMixin(pl.LightningModule):
             sync_dist=True,
         )
         return super().on_train_epoch_start()
-
