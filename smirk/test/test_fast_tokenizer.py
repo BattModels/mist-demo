@@ -13,7 +13,6 @@ def test_vocab_size():
 
 def test_special_tokens():
     tokenizer = smirk.SmirkTokenizerFast()
-    assert len(tokenizer.get_vocab()) == tokenzier.vocab_size
     assert tokenizer.pad_token == "[PAD]"
     assert tokenizer.pad_token_id == tokenizer.get_vocab()["[PAD]"]
 
