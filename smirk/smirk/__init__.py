@@ -1,12 +1,13 @@
 # Import Rust Binding
-from . import smirk as rs_smirk
+from importlib.resources import files
 from pathlib import Path
 from typing import Union
-from transformers import PreTrainedTokenizerBase, BatchEncoding
-from transformers.utils.generic import PaddingStrategy
-from transformers.data.data_collator import pad_without_fast_tokenizer_warning
-from importlib.resources import files
 
+from transformers import BatchEncoding, PreTrainedTokenizerBase
+from transformers.data.data_collator import pad_without_fast_tokenizer_warning
+from transformers.utils.generic import PaddingStrategy
+
+from . import smirk as rs_smirk
 
 VOCAB_FILE = str(Path(__file__).parent.parent.joinpath("vocab_smiles.json"))
 # Expose chemically_consistent_split
@@ -50,18 +51,15 @@ class SmirkTokenizerFast(PreTrainedTokenizerBase):
         encoding = self._tokenizer.encode_batch(
             batch_text_or_text_pairs, add_special_tokens=add_special_tokens
         )
-        batch =  BatchEncoding(
+        batch = BatchEncoding(
             data={k: [dic[k] for dic in encoding] for k in encoding[0]},
             encoding=encoding,
             n_sequences=len(encoding),
         )
         if kwargs.pop("padding_strategy") is not PaddingStrategy.DO_NOT_PAD:
             return pad_without_fast_tokenizer_warning(
-                    self,
-                    batch,
-                    return_tensors= kwargs.pop("return_tensors", "pt"),
-                    **kwargs
-                    )
+                self, batch, return_tensors=kwargs.pop("return_tensors", "pt"), **kwargs
+            )
         return batch
 
     def _decode(self, token_ids, **kwargs):

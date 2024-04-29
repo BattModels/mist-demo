@@ -1,8 +1,11 @@
-from smirk.smirk import SmirkTokenizer
-import pytest
 import json
 from copy import deepcopy
 from importlib.resources import files
+
+import pytest
+
+from smirk.smirk import SmirkTokenizer
+
 
 @pytest.fixture
 def tokenizer():
@@ -55,6 +58,7 @@ def test_encode_batch(tokenizer, smile_strings):
     assert smile_out == smile_strings
     assert smile_out[0] == smile_strings[0]
     assert smile_out[1] == smile_strings[1]
+
 
 def test_serialize(tokenizer):
     tok = deepcopy(tokenizer)

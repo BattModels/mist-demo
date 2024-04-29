@@ -1,16 +1,14 @@
 from torch import nn
 
+
 class PredictionTaskHead(nn.Module):
-    
+
     def __init__(
-            self, 
-            embed_dim: int, 
-            output_size: int = 1,
-            dropout: float = 0.2
-        ) -> None:
+        self, embed_dim: int, output_size: int = 1, dropout: float = 0.2
+    ) -> None:
         super().__init__()
-        self.desc_skip_connection = True 
-        self.fcs = [] 
+        self.desc_skip_connection = True
+        self.fcs = []
 
         self.fc1 = nn.Linear(embed_dim, embed_dim)
         self.dropout1 = nn.Dropout(dropout)

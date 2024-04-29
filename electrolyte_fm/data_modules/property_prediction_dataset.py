@@ -1,13 +1,12 @@
 import os
 from pathlib import Path
+from statistics import mean
 from typing import Dict, List, Optional, Union
 
-from datasets import load_dataset, Dataset
-from datasets.distributed import split_dataset_by_node
-
 import pytorch_lightning as pl
-from statistics import mean
 import torch
+from datasets import Dataset, load_dataset
+from datasets.distributed import split_dataset_by_node
 from torch.utils.data import DataLoader
 
 from .data_utils import DataSetupMixin
@@ -67,12 +66,12 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
             world_size=world_size,
         )
         self.val_dataset: Dataset = split_dataset_by_node(
-            ds['validation'],
+            ds["validation"],
             rank=rank,
             world_size=world_size,
         )
         self.test_dataset: Dataset = split_dataset_by_node(
-            ds['test'],
+            ds["test"],
             rank=rank,
             world_size=world_size,
         )
@@ -84,23 +83,23 @@ class PropertyPredictionDataModule(pl.LightningDataModule, DataSetupMixin):
                 spec["fill_value"] = -1
             else:
                 spec["fill_value"] = mean(
-                    d for d in self.train_dataset[spec['measure_name']] if d is not None
+                    d for d in self.train_dataset[spec["measure_name"]] if d is not None
                 )
 
     def data_collator(self, batch):
         tokens = self.tokenizer._batch_encode_plus(
-            [sample['smiles'] for sample in batch], 
+            [sample["smiles"] for sample in batch],
             add_special_tokens=True,
             return_tensors="pt",
-            padding_strategy = "longest"
-            )
+            padding_strategy="longest",
+        )
         for spec in self.task_specs:
-                tokens[spec["measure_name"]] = torch.tensor([
-                    sample[spec["measure_name"]] or spec["fill_value"] for sample in batch
-                    ])
-        
+            tokens[spec["measure_name"]] = torch.tensor(
+                [sample[spec["measure_name"]] or spec["fill_value"] for sample in batch]
+            )
+
         return tokens
-    
+
     def train_dataloader(self):
         return DataLoader(
             self.train_dataset,

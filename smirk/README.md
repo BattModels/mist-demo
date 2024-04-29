@@ -16,4 +16,3 @@ All commands should be run from the `smirk` directory
 
 - **Test**: run `cargo test`
 - **Build**: run `cargo build`
-
