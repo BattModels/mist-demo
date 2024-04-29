@@ -5,6 +5,12 @@ from transformers.data import DataCollatorForLanguageModeling
 import smirk
 
 
+def test_vocab_size():
+    tokenizer = smirk.SmirkTokenizerFast()
+    assert len(tokenizer.get_vocab()) > 0
+    assert len(tokenizer.get_vocab()) == tokenizer.vocab_size
+
+
 def test_special_tokens():
     tokenizer = smirk.SmirkTokenizerFast()
     assert tokenizer.pad_token == "[PAD]"
@@ -18,6 +24,16 @@ def test_pad(smile_strings):
     code = tokenizer.pad(code)
     assert len(code["input_ids"][0]) == len(code["input_ids"][1])
     assert len(code["special_tokens_mask"][0]) == len(code["special_tokens_mask"][1])
+
+
+def test_encode(smile_strings):
+    tokenizer = smirk.SmirkTokenizerFast()
+    codes = [tokenizer(smile) for smile in smile_strings]
+    for code, smile in zip(codes, smile_strings):
+        assert "input_ids" in code
+        assert "special_tokens_mask" in code
+        assert "attention_mask" in code
+        assert tokenizer.decode(code["input_ids"], skip_special_tokens=True) == smile
 
 
 def test_collate(smile_strings):
