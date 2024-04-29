@@ -37,4 +37,4 @@ We use [pre-commit](https://pre-commit.com) to preform various linting checks on
 
 1. Install poetry (See above)
 2. Run pre-commit: `pre-commit`
-3. Run before committing: `pre-commit install`
+3. Run before committing: `pre-commit install --allow-missing-config`
