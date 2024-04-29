@@ -1,7 +1,7 @@
 from transformers import PreTrainedTokenizerBase
 
 
-def load_tokenizer(name, **kwargs) -> PretrainedTokenizerBase:
+def load_tokenizer(name, **kwargs) -> PreTrainedTokenizerBase:
     # Locate Tokeniser and dataset
     unk_name = RuntimeError(f"Unknown tokenizer: {name}")
     if name.startswith("smirk"):
