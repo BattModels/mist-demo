@@ -1,21 +1,24 @@
 import os
-import torch
-
 from datetime import timedelta
-from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.cli import LightningCLI, LightningArgumentParser
+
+import torch
+from jsonargparse import lazy_instance
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.cli import LightningCLI, LightningArgumentParser
 from electrolyte_fm.utils.callbacks import ThroughputMonitor
-from jsonargparse import lazy_instance
 
 # classes passed via cli
 from electrolyte_fm.models.roberta_base import RoBERTa
-from electrolyte_fm.models.roberta_dataset import RobertaDataSet
+from electrolyte_fm.data_modules import RobertaDataSet
+from electrolyte_fm.data_modules import PropertyPredictionDataModule
+from electrolyte_fm.models.lm_finetuning import LMFinetuning
 from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
 
 
 class MyLightningCLI(LightningCLI):
+
     def before_fit(self):
         if logger := self.trainer.logger:
             logger.log_hyperparams(
@@ -27,9 +30,28 @@ class MyLightningCLI(LightningCLI):
             )
 
     def add_arguments_to_parser(self, parser: LightningArgumentParser) -> None:
+        parser.add_argument(
+            "--tags",
+            type=list,
+            help="Tags for WandB logger",
+            default=[],
+        )
+        parser.link_arguments("tags", "trainer.logger.init_args.tags")
+
         # Set model vocab_size from the dataset's vocab size
         parser.link_arguments(
-            "data.vocab_size", "model.vocab_size", apply_on="instantiate"
+            "data.vocab_size", "model.init_args.vocab_size", apply_on="instantiate"
+        )
+        # Set model task_specs from the dataset's task_specs
+        parser.link_arguments(
+            "data.task_specs", "model.init_args.task_specs", apply_on="instantiate"
+        )
+
+        # Configure tokenizer from checkpoint
+        parser.link_arguments(
+            "model.init_args.encoder_ckpt",
+            "data.init_args.tokenizer",
+            compute_fn=SaveConfigWithCkpts.get_ckpt_tokenizer,
         )
 
 
@@ -58,22 +80,19 @@ def cli_main(args=None):
     ]
 
     num_nodes = int(os.environ.get("NRANKS", 1))
-    rank = int(os.environ.get("PMI_RANK", 1))
+    rank = int(os.environ.get("PMI_RANK", os.environ.get("GLOBAL_RANK", 0)))
     os.environ["NODE_RANK"] = str(rank % num_nodes)
     os.environ["GLOBAL_RANK"] = str(rank % num_nodes)
+
     print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
     if rank is not None and int(rank) != 0:
         logger = None
     else:
-        logger = lazy_instance(
-            WandbLogger, project="mist", save_code=True, tags=["pretraining"]
-        )
+        logger = lazy_instance(WandbLogger, project="mist", save_code=True)
 
     torch.set_num_threads(8)
     torch.set_float32_matmul_precision("high")
     return MyLightningCLI(
-        model_class=RoBERTa,
-        datamodule_class=RobertaDataSet,
         trainer_defaults={
             "callbacks": callbacks,
             "logger": logger,
@@ -86,6 +105,7 @@ def cli_main(args=None):
         save_config_callback=SaveConfigWithCkpts,
         save_config_kwargs={"overwrite": True},
         args=args,
+        subclass_mode_model=False,
         run=args is None,  # support unit testing
     )
 

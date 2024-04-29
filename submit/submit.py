@@ -2,17 +2,20 @@
 # For Help: submit.py --help
 # NOTE: Must activate environment (`poetry shell`) first
 from __future__ import annotations
-import jinja2
-import typer
+
+import fcntl
+import json
 import os
 import sys
-import fcntl
-import yaml
-import json
+import shlex
 from copy import deepcopy
 from pathlib import Path
 from typing import List
+
+import jinja2
 import rich
+import typer
+import yaml
 from rich.json import JSON
 from rich.panel import Panel
 from rich.prompt import Confirm
@@ -85,7 +88,7 @@ def compose(
         help="Additional configuration to apply last",
     ),
     default: bool = typer.Option(
-        True,
+        False,
         help="Use the default.yaml file next to the template",
     ),
     script_config: bool = typer.Option(
@@ -126,13 +129,15 @@ def compose(
         script_config_file = Path(file).with_suffix(".yaml")
         if script_config_file.is_file():
             config = merge_config(config, parse_data(script_config_file))
-
+            
     # Overlay data files
     for file in data:
         config = merge_config(config, parse_data(Path(file)))
 
     # Overlay cli json
     config = merge_config(config, json.loads(json_config))
+
+    
 
     # Generate Script
     script = template.render(config)

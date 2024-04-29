@@ -4,7 +4,6 @@ import json
 from copy import deepcopy
 from importlib.resources import files
 
-
 @pytest.fixture
 def tokenizer():
     VOCAB_FILE = files("smirk").joinpath("vocab_smiles.json")
@@ -56,7 +55,6 @@ def test_encode_batch(tokenizer, smile_strings):
     assert smile_out == smile_strings
     assert smile_out[0] == smile_strings[0]
     assert smile_out[1] == smile_strings[1]
-
 
 def test_serialize(tokenizer):
     tok = deepcopy(tokenizer)

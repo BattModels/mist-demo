@@ -1,0 +1,10 @@
+train:
+  data: RobertaDataSet
+  data.num_workers: 1  # Only have one shard per GPU in realspace_v2_dev\
+  data.batch_size: 128
+  data.tokenizer: smirk
+  model: RoBERTa
+  model.optimizer: torch.optim.Adam
+  model.optimizer.lr: 1.6e-4
+  model.optimizer.weight_decay: 0.01
+  tags: [pretraining]

@@ -1,6 +1,0 @@
-train:
-  data.batch_size: 128
-  data.tokenizer: ibm/MoLFormer-XL-both-10pct
-  model.optimizer: torch.optim.Adam
-  model.optimizer.lr: 1.6e-4
-  model.optimizer.weight_decay: 0.01

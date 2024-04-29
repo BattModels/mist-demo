@@ -3,6 +3,8 @@ from . import smirk as rs_smirk
 from pathlib import Path
 from typing import Union
 from transformers import PreTrainedTokenizerBase, BatchEncoding
+from transformers.utils.generic import PaddingStrategy
+from transformers.data.data_collator import pad_without_fast_tokenizer_warning
 from importlib.resources import files
 
 
@@ -18,7 +20,7 @@ class SmirkTokenizerFast(PreTrainedTokenizerBase):
         if tokenizer_file := kwargs.pop("tokenizer_file", None):
             tokenizer = rs_smirk.SmirkTokenizer.from_file(tokenizer_file)
         elif vocab_file := kwargs.pop("vocab_file", default_vocab_file):
-            padding = kwargs.pop("padding", False)
+            # padding = kwargs.pop("padding", False)
             tokenizer = rs_smirk.SmirkTokenizer(vocab_file)
         self._tokenizer = tokenizer
 
@@ -48,11 +50,19 @@ class SmirkTokenizerFast(PreTrainedTokenizerBase):
         encoding = self._tokenizer.encode_batch(
             batch_text_or_text_pairs, add_special_tokens=add_special_tokens
         )
-        return BatchEncoding(
+        batch =  BatchEncoding(
             data={k: [dic[k] for dic in encoding] for k in encoding[0]},
             encoding=encoding,
             n_sequences=len(encoding),
         )
+        if kwargs.pop("padding_strategy") is not PaddingStrategy.DO_NOT_PAD:
+            return pad_without_fast_tokenizer_warning(
+                    self,
+                    batch,
+                    return_tensors= kwargs.pop("return_tensors", "pt"),
+                    **kwargs
+                    )
+        return batch
 
     def _decode(self, token_ids, **kwargs):
         skip_special_tokens = kwargs.get("skip_special_tokens", False)

@@ -4,6 +4,7 @@ use crate::pretokenizer::SmirkPreTokenizer;
 use dict_derive::{FromPyObject, IntoPyObject};
 use pyo3::types::{PyAny, PyString};
 use pyo3::{pyclass, pymethods, PyResult, Python};
+
 use tokenizers;
 use tokenizers::decoders::fuse::Fuse;
 use tokenizers::models::wordlevel::WordLevel;

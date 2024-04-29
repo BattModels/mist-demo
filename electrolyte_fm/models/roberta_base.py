@@ -1,14 +1,12 @@
-import json
-from pathlib import Path
-from pytorch_lightning.loggers import WandbLogger
 import torch
-import pytorch_lightning as pl
-from pytorch_lightning.cli import OptimizerCallable, LRSchedulerCallable
+from pytorch_lightning.cli import LRSchedulerCallable, OptimizerCallable
+from pytorch_lightning.loggers import WandbLogger
 from transformers import RobertaConfig, RobertaForMaskedLM
-from deepspeed.utils.zero_to_fp32 import get_fp32_state_dict_from_zero_checkpoint
+
+from .model_utils import DeepSpeedMixin, LoggingMixin
 
 
-class RoBERTa(pl.LightningModule):
+class RoBERTa(DeepSpeedMixin, LoggingMixin):
     """
     PyTorch Lightning module for RoBERTa model MLM pre-training.
     """
@@ -43,6 +41,9 @@ class RoBERTa(pl.LightningModule):
         )
         self.model = RobertaForMaskedLM(config=self.config)
 
+    def get_encoder(self):
+        return self.model.roberta
+    
     def forward(self, batch, **kwargs):  # type: ignore[override]
         out = self.model(
             batch["input_ids"],
@@ -111,25 +112,3 @@ class RoBERTa(pl.LightningModule):
                 "lr_scheduler": {"scheduler": schedule(optimizer), "interval": "step"},
             }
         return optimizer
-
-    @classmethod
-    def load_deepspeed(cls, checkpoint_dir, config_path=None):
-        """Restore from a deepspeed checkpoint, mainly used for downstream tasks"""
-        checkpoint_dir = Path(checkpoint_dir).resolve()
-        config_path = config_path or checkpoint_dir.parent.parent.joinpath(
-            "model_hparams.json"
-        )
-        assert (
-            checkpoint_dir.is_dir()
-        ), f"Missing deepspeed checkpoint director {checkpoint_dir}"
-        assert config_path.is_file(), f"Missing model config file {config_path}"
-
-        # Restore mode from config
-        with open(config_path, "r") as fid:
-            model_config = json.load(fid)
-        model = cls(**model_config)
-
-        # Load model weights from checkpoint
-        state = get_fp32_state_dict_from_zero_checkpoint(checkpoint_dir)
-        model.load_state_dict(state, strict=True, assign=True)
-        return model
