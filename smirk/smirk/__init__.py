@@ -77,6 +77,10 @@ class SmirkTokenizerFast(PreTrainedTokenizerBase):
     def get_vocab(self):
         return self._tokenizer.get_vocab(with_added_tokens=True)
 
+    @property
+    def vocab_size(self):
+        return self._tokenizer.get_vocab_size(with_added_tokens=True)
+
     def convert_tokens_to_ids(
         self, tokens: Union[str, list[str]]
     ) -> Union[int, list[int]]:
