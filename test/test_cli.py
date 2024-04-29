@@ -1,10 +1,11 @@
 import json
-from tempfile import TemporaryDirectory
 from pathlib import Path
 from random import randint
-from torch.nn import Module
+from tempfile import TemporaryDirectory
+
 from deepspeed.utils import zero_to_fp32
 from pytorch_lightning.loggers import WandbLogger
+from torch.nn import Module
 
 from train import cli_main
 

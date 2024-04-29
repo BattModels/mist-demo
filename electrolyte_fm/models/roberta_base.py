@@ -43,7 +43,7 @@ class RoBERTa(DeepSpeedMixin, LoggingMixin):
 
     def get_encoder(self):
         return self.model.roberta
-    
+
     def forward(self, batch, **kwargs):  # type: ignore[override]
         out = self.model(
             batch["input_ids"],

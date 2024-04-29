@@ -1,7 +1,9 @@
-import pytest
 from pathlib import Path
-from submit.submit import cli
+
+import pytest
 from typer.testing import CliRunner
+
+from submit.submit import cli
 
 runner = CliRunner()
 
@@ -53,6 +55,7 @@ def test_multiple_data():
     )
     assert result.exit_code == 0
 
+
 @pytest.fixture
 def finetuning_configs():
     return [
@@ -60,14 +63,11 @@ def finetuning_configs():
         "submit/multitask_classification.yaml",
     ]
 
+
 def test_finetuning(finetuning_configs):
     for config in finetuning_configs:
         result = runner.invoke(
             cli,
-            [
-                "submit/h001.j2",
-                "--data",
-                config
-            ],
+            ["submit/h001.j2", "--data", config],
         )
         assert result.exit_code == 0

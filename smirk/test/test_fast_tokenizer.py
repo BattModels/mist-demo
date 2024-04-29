@@ -1,7 +1,8 @@
-import smirk
+from test_tokenize_smiles import smile_strings
 from transformers import BatchEncoding
 from transformers.data import DataCollatorForLanguageModeling
-from test_tokenize_smiles import smile_strings
+
+import smirk
 
 
 def test_special_tokens():

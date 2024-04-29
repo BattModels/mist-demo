@@ -5,15 +5,15 @@ import torch
 from jsonargparse import lazy_instance
 from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.cli import LightningArgumentParser, LightningCLI
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.cli import LightningCLI, LightningArgumentParser
-from electrolyte_fm.utils.callbacks import ThroughputMonitor
+
+from electrolyte_fm.data_modules import PropertyPredictionDataModule, RobertaDataSet
+from electrolyte_fm.models.lm_finetuning import LMFinetuning
 
 # classes passed via cli
 from electrolyte_fm.models.roberta_base import RoBERTa
-from electrolyte_fm.data_modules import RobertaDataSet
-from electrolyte_fm.data_modules import PropertyPredictionDataModule
-from electrolyte_fm.models.lm_finetuning import LMFinetuning
+from electrolyte_fm.utils.callbacks import ThroughputMonitor
 from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
 
 

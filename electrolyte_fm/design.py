@@ -1,8 +1,9 @@
-import pyDOE2
-import yaml
-import typer
 import json
 from copy import deepcopy
+
+import pyDOE2
+import typer
+import yaml
 
 __doc__ = """
 # Hyperparameter Sweeps for MIST

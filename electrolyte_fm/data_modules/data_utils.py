@@ -1,6 +1,8 @@
+from transformers import AutoTokenizer, PreTrainedTokenizerBase
+
 from smirk import SmirkTokenizerFast
-from transformers import (AutoTokenizer,
-                          PreTrainedTokenizerBase)
+
+
 class DataSetupMixin:
 
     def setup_tokenizer(self, tokenizer: str):

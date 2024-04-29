@@ -1,8 +1,10 @@
-from smirk.smirk import SmirkTokenizer
-import pytest
 import json
 from copy import deepcopy
 from importlib.resources import files
+
+import pytest
+
+from smirk.smirk import SmirkTokenizer
 
 
 @pytest.fixture
@@ -27,7 +29,22 @@ def check_encode(tok, x):
 
 def test_pretokenize(tokenizer):
     splits = tokenizer.pretokenize("[C][N][=C][=O]")
-    assert splits == ["[", "C", "]", "[", "N", "]", "[", "=", "C", "]", "[", "=", "O", "]"]
+    assert splits == [
+        "[",
+        "C",
+        "]",
+        "[",
+        "N",
+        "]",
+        "[",
+        "=",
+        "C",
+        "]",
+        "[",
+        "=",
+        "O",
+        "]",
+    ]
     assert len(splits) == 14
 
 

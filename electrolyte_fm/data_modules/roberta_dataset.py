@@ -7,6 +7,8 @@ from torch.utils.data import DataLoader
 from transformers import DataCollatorForLanguageModeling
 
 from .data_utils import DataSetupMixin
+
+
 class RobertaDataSet(pl.LightningDataModule, DataSetupMixin):
     def __init__(
         self,
@@ -106,7 +108,7 @@ class RobertaDataSet(pl.LightningDataModule, DataSetupMixin):
             prefetch_factor=self.prefetch_factor,
             pin_memory=True,
             persistent_workers=True,
-            shuffle=False
+            shuffle=False,
         )
 
     def test_dataset(self):
