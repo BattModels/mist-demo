@@ -4,6 +4,8 @@ from copy import deepcopy
 import pyDOE2
 import typer
 import yaml
+from rich.console import Console
+from rich.table import Table
 
 __doc__ = """
 # Hyperparameter Sweeps for MIST
@@ -22,7 +24,7 @@ config:
     trainer.max_steps: $steps
     data.tokenizer: $tokenizer
 
-command: python submit/submit.py submit/polaris.j2 ... $json --no-config | bash
+command: python submit/submit.py submit/polaris.j2 ... $json --no-confirm | bash
 
 space:
   steps:
@@ -65,6 +67,10 @@ class HyperSpace:
     def levels(self):
         return [len(self._data[k]) for k in self._keys]
 
+    @property
+    def factors(self):
+        return self._keys
+
     def get_design(self, experiments: list[list[int]]) -> list[dict]:
         designs = []
         for experiment in experiments:
@@ -104,6 +110,23 @@ def design_experiment(f, file: typer.FileText):
         print(cmd)
 
 
+def display_experiment(f, file: typer.FileText):
+    data = yaml.safe_load(file)
+    hs = HyperSpace(data["space"])
+    table = Table()
+    for factor in hs.factors:
+        table.add_column(str(factor))
+
+    for expr in hs.get_design(f(hs.levels)):
+        table.add_row(*[str(x) for x in expr.values()])
+
+    console = Console(stderr=True)
+    console.print(table)
+
+    # Rewind the file for later commands
+    file.seek(0)
+
+
 @cli.command()
 def gsd(
     file: typer.FileText,
@@ -112,6 +135,9 @@ def gsd(
         "--reduce",
         help="Factor by which to reduce the design space by",
         min=2,
+    ),
+    display: bool = typer.Option(
+        False, "-d", "--display", help="Display the experiment on stderr"
     ),
 ):
     """
@@ -123,15 +149,26 @@ def gsd(
     def f(levels):
         return pyDOE2.gsd(levels, r)
 
+    if display:
+        display_experiment(f, file)
+
     design_experiment(f, file)
 
 
 @cli.command()
-def fullfact(file: typer.FileText):
+def fullfact(
+    file: typer.FileText,
+    display: bool = typer.Option(
+        False, "-d", "--display", help="Display the experiment on stderr"
+    ),
+):
     """Full Factorial Design"""
 
     def f(levels):
         return pyDOE2.fullfact(levels).astype(int).tolist()
+
+    if display:
+        display_experiment(f, file)
 
     design_experiment(f, file)
 
