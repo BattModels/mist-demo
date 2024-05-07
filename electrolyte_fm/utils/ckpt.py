@@ -1,5 +1,6 @@
 import importlib
 import json
+import os
 from pathlib import Path
 
 from jsonargparse import Namespace
@@ -61,6 +62,10 @@ class SaveConfigWithCkpts(Callback):
                     "init_args": trainer.lightning_module.hparams,
                 }
                 json.dump(model_config, fid, default=lambda x: str(type(x)))
+
+            # Save Environment
+            with open(Path(config_path, "env.json"), "w") as fid:
+                json.dump(dict(os.environ), fid, sort_keys=True)
 
             if logger := trainer.logger:
                 logger.log_hyperparams({"cli": self.config.as_dict()})
