@@ -15,8 +15,8 @@ env:
   NCCL_NET_GDR_LEVEL: PHB
   NCCL_COLLNET_ENABLE: 1
 
-  # MPI Flags
-  MPICH_GPU_SUPPORT_ENABLED: 1
+  # MPICH Error iff enabled: issue #30
+  MPICH_GPU_SUPPORT_ENABLED: 0
 
   # Get Slingshot fabric report
   MPICH_OFI_CXI_COUNTER_REPORT: 2
