@@ -1,5 +1,5 @@
 #!/bin/sh
-{%- from "./cliopts.j2" import cliopts %}
+{%- from "./utils.j2" import cliopts, export_env %}
 #PBS -N {{ jobname or "MIST" }}
 #PBS -l select={{ nodes or 1 }}:system=polaris
 #PBS -l place=scatter
@@ -7,7 +7,7 @@
 #PBS -l walltime={{ walltime or "00:20:00" }}
 #PBS -q {{ queue or "debug" }}
 #PBS -A {{ account or "FoundEnergy" }}
-set -x
+# set -x
 cd ${PBS_O_WORKDIR}
 
 # Internet access on nodes
@@ -22,8 +22,6 @@ echo "Set HTTP_PROXY and to $HTTP_PROXY"
 master_node=$(cat $PBS_NODEFILE | head -1)
 export MASTER_ADDR=$(host $master_node | head -1 | awk '{print $4}')
 export MASTER_PORT=2345
-# Enable GPU-MPI (if supported by application)
-export MPICH_GPU_SUPPORT_ENABLED=1
 
 # MPI and OpenMP settings
 export NRANKS=$(wc -l <"${PBS_NODEFILE}")
@@ -31,19 +29,17 @@ echo "NUM_OF_RANKS= ${NRANKS}"
 echo <$PBS_NODEFILE
 
 # Initialize environment
-module load /soft/modulefiles/
 module purge
-module load conda/2024-04-25
+module use /soft/modulefiles/
+module --ignore_cache load conda/2024-04-29
 conda activate base
 source ${PBS_O_WORKDIR}/activate
 
+# Set env variables
+{{- export_env( env ) }}
+
 # Logging
 echo "$(df -h /local/scratch)"
-
-# NCCL settings
-export NCCL_DEBUG=WARN
-export NCCL_NET_GDR_LEVEL=PHB
-export NCCL_COLLNET_ENABLE=1
 
 # For applications that internally handle binding MPI/OpenMP processes to GPUs
 {%- if nsys is defined %}
