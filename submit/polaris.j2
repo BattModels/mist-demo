@@ -7,7 +7,7 @@
 #PBS -l walltime={{ walltime or "00:20:00" }}
 #PBS -q {{ queue or "debug" }}
 #PBS -A {{ account or "FoundEnergy" }}
-# set -x
+set -x
 cd ${PBS_O_WORKDIR}
 
 # Internet access on nodes
