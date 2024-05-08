@@ -1,12 +1,13 @@
-import pytest
+import json
 from unittest import mock
 
-import json
-from pytorch_lightning import LightningModule, LightningDataModule
-from pytorch_lightning.cli import LightningArgumentParser, LightningCLI
-from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
+import pytest
 import torch
+from pytorch_lightning import LightningDataModule, LightningModule
+from pytorch_lightning.cli import LightningArgumentParser, LightningCLI
 from torch.utils.data import DataLoader
+
+from electrolyte_fm.utils.ckpt import SaveConfigWithCkpts
 
 
 class MockedModel(LightningModule):
@@ -37,37 +38,33 @@ class MockedData(LightningDataModule):
 
 @pytest.fixture()
 def cli(tmp_path):
-    
-    with mock.patch("sys.argv", [ 
-        "any.py",
-        "--data.tokenizer=smirk",
-        "--data.linked=10", 
-        "--model.vocab_size=256"
-        ]):
+
+    with mock.patch(
+        "sys.argv",
+        [
+            "any.py",
+            "--data.tokenizer=smirk",
+            "--data.linked=10",
+            "--model.vocab_size=256",
+        ],
+    ):
         parser = LightningArgumentParser()
         parser.add_class_arguments(MockedModel, "model")
         parser.add_class_arguments(MockedData, "data")
-        parser.link_arguments(
-            "data.linked", 
-            "model.linked",
-            apply_on="parse"
-            )
+        parser.link_arguments("data.linked", "model.linked", apply_on="parse")
         parsed_args = dict(parser.parse_args())
-        args_ = ["fit", ]
-        args_.extend([
-                "--" + k + "=" + str(v) for k, v in parsed_args.items()
-            ])
+        args_ = [
+            "fit",
+        ]
+        args_.extend(["--" + k + "=" + str(v) for k, v in parsed_args.items()])
 
-    _cli =  LightningCLI(
-        trainer_defaults={
-            "max_steps": 2,
-            "default_root_dir": tmp_path,
-        },
-        model_class = MockedModel,
-        datamodule_class = MockedData,
+    _cli = LightningCLI(
+        trainer_defaults={"max_steps": 2, "default_root_dir": tmp_path,},
+        model_class=MockedModel,
+        datamodule_class=MockedData,
         save_config_callback=SaveConfigWithCkpts,
-        args= args_
-        )
+        args=args_,
+    )
     return _cli
 
 
