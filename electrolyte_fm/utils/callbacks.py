@@ -22,8 +22,13 @@ class ThroughputMonitor(Callback):
     def on_train_start(
         self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"
     ) -> None:
-        self.record_macro_batch_size("train", trainer.datamodule.batch_size, trainer)
-        self.record_macro_batch_size("val", trainer.datamodule.val_batch_size, trainer)
+        if trainer.is_global_zero:
+            self.record_macro_batch_size(
+                "train", trainer.datamodule.batch_size, trainer
+            )
+            self.record_macro_batch_size(
+                "val", trainer.datamodule.val_batch_size, trainer
+            )
 
     def record_macro_batch_size(
         self,
@@ -59,6 +64,7 @@ class ThroughputMonitor(Callback):
             },
             rank_zero_only=True,
             on_epoch=True,
+            sync_dist=False,
         )
 
     def on_validation_batch_start(
@@ -69,7 +75,8 @@ class ThroughputMonitor(Callback):
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
-        self.start_batch_timer()
+        if trainer.is_global_zero:
+            self.start_batch_timer()
 
     def on_train_batch_start(
         self,
@@ -78,7 +85,8 @@ class ThroughputMonitor(Callback):
         batch: Any,
         batch_idx: int,
     ) -> None:
-        self.start_batch_timer()
+        if trainer.is_global_zero:
+            self.start_batch_timer()
 
     def on_train_batch_end(
         self,
@@ -88,7 +96,8 @@ class ThroughputMonitor(Callback):
         batch: Any,
         batch_idx: int,
     ) -> None:
-        self.record_batch_perf(trainer, pl_module, "train")
+        if trainer.is_global_zero:
+            self.record_batch_perf(trainer, pl_module, "train")
 
     def on_validation_batch_end(
         self,
@@ -99,4 +108,5 @@ class ThroughputMonitor(Callback):
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
-        self.record_batch_perf(trainer, pl_module, "val")
+        if trainer.is_global_zero:
+            self.record_batch_perf(trainer, pl_module, "val")

@@ -1,5 +1,6 @@
 import importlib
 import json
+import os
 from pathlib import Path
 
 from jsonargparse import Namespace
@@ -31,6 +32,7 @@ class SaveConfigWithCkpts(Callback):
         self.config = config
         self.overwrite = overwrite
         self.already_saved = False
+        self.config_path = None
 
     def setup(self, trainer: Trainer, pl_module: LightningModule, stage: str) -> None:
         if self.already_saved:
@@ -41,16 +43,19 @@ class SaveConfigWithCkpts(Callback):
             config_path = Path(log_dir, str(logger.name), str(logger.version))
         else:
             config_path = Path(log_dir)
+        self.config_path = config_path
 
         if trainer.is_global_zero:
             config_path.mkdir(parents=True, exist_ok=True)
-            self.parser.save(
+            config_json = self.parser.dump(
                 self.config,
-                Path(config_path, "config.json"),
                 skip_none=False,
-                overwrite=self.overwrite,
+                skip_check=True,
+                skip_link_targets=False,
                 format="json",
             )
+            with open(Path(config_path, "config.json"), "w") as config_file:
+                config_file.write(config_json)
 
             # Save model hyperparameters
             with open(Path(config_path, "model_hparams.json"), "w") as fid:
@@ -61,6 +66,10 @@ class SaveConfigWithCkpts(Callback):
                     "init_args": trainer.lightning_module.hparams,
                 }
                 json.dump(model_config, fid, default=lambda x: str(type(x)))
+
+            # Save Environment
+            with open(Path(config_path, "env.json"), "w") as fid:
+                json.dump(dict(os.environ), fid, sort_keys=True)
 
             if logger := trainer.logger:
                 logger.log_hyperparams({"cli": self.config.as_dict()})

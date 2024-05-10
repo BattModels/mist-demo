@@ -6,5 +6,17 @@ mpiexe:
   ppn: 1
   depth: 64
   cpu-bind: depth
+  hostfile: "${PBS_NODEFILE}"
 train:
   data.path: /eagle/FoundEnergy/realspace_v2
+env:
+  # NCCL Setting
+  NCCL_DEBUG: WARN
+  NCCL_NET_GDR_LEVEL: PHB
+  NCCL_COLLNET_ENABLE: 1
+
+  # MPICH Error iff enabled: issue #30
+  MPICH_GPU_SUPPORT_ENABLED: 0
+
+  # Get Slingshot fabric report
+  MPICH_OFI_CXI_COUNTER_REPORT: 2
