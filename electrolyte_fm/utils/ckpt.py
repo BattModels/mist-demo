@@ -47,13 +47,13 @@ class SaveConfigWithCkpts(Callback):
         if trainer.is_global_zero:
             config_path.mkdir(parents=True, exist_ok=True)
             config_json = self.parser.dump(
-                    self.config,
-                    skip_none=False,
-                    skip_check=True,
-                    skip_link_targets=False,
-                    format="json",
-                )
-            with open(Path(config_path, "config.json"), 'w') as config_file:
+                self.config,
+                skip_none=False,
+                skip_check=True,
+                skip_link_targets=False,
+                format="json",
+            )
+            with open(Path(config_path, "config.json"), "w") as config_file:
                 config_file.write(config_json)
 
             # Save model hyperparameters
