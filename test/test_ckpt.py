@@ -59,7 +59,10 @@ def cli(tmp_path):
         args_.extend(["--" + k + "=" + str(v) for k, v in parsed_args.items()])
 
     _cli = LightningCLI(
-        trainer_defaults={"max_steps": 2, "default_root_dir": tmp_path,},
+        trainer_defaults={
+            "max_steps": 2,
+            "default_root_dir": tmp_path,
+        },
         model_class=MockedModel,
         datamodule_class=MockedData,
         save_config_callback=SaveConfigWithCkpts,
