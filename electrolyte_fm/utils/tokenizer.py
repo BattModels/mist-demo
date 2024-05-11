@@ -8,9 +8,9 @@ def load_tokenizer(name, **kwargs) -> PreTrainedTokenizerBase:
         from smirk import SmirkTokenizerFast
 
         if name == "smirk":
-            return SmirkTokenizerFast(is_smiles=False)
-        elif name == "smirk-selfies":
             return SmirkTokenizerFast(is_smiles=True)
+        elif name == "smirk-selfies":
+            return SmirkTokenizerFast(is_smiles=False)
 
         raise unk_name
 
