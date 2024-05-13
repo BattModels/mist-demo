@@ -3,11 +3,13 @@ Benchmarking RoBERTa model pre-training on molecular datasets.
 
 # Installation
 
-0. Get python3.10
+0. Get python3.10 
 
 ## Polaris
 ```shell
-module conda/2024-04-25
+module purge
+module use /soft/modulefiles/
+module --ignore_cache load conda/2024-04-29
 conda activate base
 ```
 
