@@ -1,5 +1,5 @@
 #!/bin/bash
-{%- from "./cliopts.j2" import cliopts %}
+{%- from "./utils.j2" import cliopts, export_env %}
 #SBATCH -p venkvis-debug
 #SBATCH --nodes {{ nodes or 1 }}
 #SBATCH --ntasks-per-node {{ gpus_per_node or 2 }}
@@ -22,6 +22,9 @@ export NRANKS=1
 module purge
 module --ignore_cache load spack/0.21 python/3.11.5 cuda/12.2 openmpi/4.1.6
 source ./activate
+
+# Set env variables
+{{- export_env( env ) }}
 
 {%- if nsys is defined %}
 nsys profile \
