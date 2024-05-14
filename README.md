@@ -34,7 +34,7 @@ Same as above except:
 # Submitting Jobs
 
 ```shell
-source activate # Activate Environment
+source ./activate # Activate Environment
 ./submit/submit.py ./submit/polaris.j2 --data ./submit/pretrain.yaml | qsub
 ```
 
