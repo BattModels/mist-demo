@@ -1,10 +1,29 @@
 train:
-  data: RobertaDataSet
-  data.num_workers: 1  # Only have one shard per GPU in realspace_v2_dev\
-  data.batch_size: 128
-  data.tokenizer: smirk
+  tags: [pretraining]
+
+  # Model Size
   model: RoBERTa
-  model.optimizer: torch.optim.Adam
+  model.intermediate_size: 3072
+  model.hidden_size: 768
+  model.num_attention_heads: 12
+  model.num_hidden_layers: 6
+
+  # Dataset
+  data: RobertaDataSet
+  data.batch_size: 128
+  data.val_batch_size: 2048
+  data.tokenizer: smirk
+
+  # Optimizer Settings
+  model.optimizer: torch.optim.AdamW
   model.optimizer.lr: 1.6e-4
   model.optimizer.weight_decay: 0.01
-  tags: [pretraining]
+  model.lr_schedule: electrolyte_fm.utils.lr_schedule.RelativeCosineWarmup
+  model.lr_schedule.num_training_steps: 50_000
+  model.lr_schedule.num_warmup_steps: beta2
+  model.lr_schedule.rel_decay: 0.1
+
+  # Trainer Configuration
+  trainer.max_steps: 10_000
+  trainer.val_check_interval: 100
+  trainer.precision: bf16-true
