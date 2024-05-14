@@ -26,14 +26,32 @@ python -m pipx install --python $(which python) poetry
 
 4. Install environment: `poetry install`
 
+## Artemis
+
+Same as above except:
+1. Skip loading conda (just use poetry)
+2. Ensure a module for CUDA@12.2 exists, may need to install with spack (make sure `buildable: True`)
+
 # Submitting Jobs
 
 ```shell
 source activate # Activate Environment
-./submit/submit.py ./submit/polaris.j2 | qsub
+./submit/submit.py ./submit/polaris.j2 --data ./submit/pretrain.yaml | qsub
 ```
 
 See `submit/submit.py --help` for more info
+
+## Hackathon
+
+Create a file `hack.yml` and include it as an overlay to `submit.py` (i.e. `./submit/submit.py ... --data hack.py ...`).
+Put the following in `hack.yml`:
+```yaml
+queue: S1880287
+account: GPU_Hack
+walltime: "1:0:0"
+train:
+    data.path: /grand/gpu_hack/FoundEnergy/realspace_v3_dev
+```
 
 # Development
 
