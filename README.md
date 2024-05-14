@@ -12,7 +12,6 @@ Benchmarking RoBERTa model pre-training on molecular datasets.
 module purge
 module use /soft/modulefiles/
 module --ignore_cache load conda/2024-04-29
-module conda/2024-04-25
 conda activate base
 ```
 
