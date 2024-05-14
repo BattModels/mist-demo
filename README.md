@@ -43,10 +43,10 @@ See `submit/submit.py --help` for more info
 
 ## Hackathon
 
-Create a file `hack.yml` and include it as an overlay to `submit.py` (i.e. `./submit/submit.py ... --data hack.py ...`).
-Put the following in `hack.yml`:
+Create a file `hack.yaml` and include it as an overlay to `submit.py` (i.e. `./submit/submit.py ... --data hack.yaml ...`).
+Put the following in `hack.yaml`:
 ```yaml
-queue: S1880287
+queue: debug
 account: GPU_Hack
 walltime: "1:0:0"
 train:
