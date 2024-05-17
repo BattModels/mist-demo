@@ -47,6 +47,7 @@ Put the following in `hack.yaml`:
 ```yaml
 queue: debug
 account: GPU_Hack
+nodes: 2
 walltime: "1:0:0"
 train:
     data.path: /grand/gpu_hack/FoundEnergy/realspace_v3_dev
