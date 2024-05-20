@@ -3,10 +3,10 @@ train:
 
   # Model Size
   model: RoBERTa
-  model.intermediate_size: 3072
+  model.intermediate_size: 768
   model.hidden_size: 768
   model.num_attention_heads: 12
-  model.num_hidden_layers: 6
+  model.num_hidden_layers: 12
 
   # Dataset
   data: RobertaDataSet
