@@ -79,8 +79,7 @@ def cli_main(args=None):
         LearningRateMonitor("step"),
     ]
 
-    num_nodes = int(os.environ.get("NNODES", 1))
-    rank = int(os.environ.get("PMI_RANK", 0))
+    rank = int(os.environ.get("PMI_RANK", None))
     if rank is not None and int(rank) != 0:
         logger = None
     else:
@@ -93,8 +92,6 @@ def cli_main(args=None):
             "callbacks": callbacks,
             "logger": logger,
             "precision": "16-mixed",
-            "devices": -1,
-            "num_nodes": num_nodes or 1,
             "strategy": "deepspeed",
             "use_distributed_sampler": False,  # Handled by DataModule (Needed as Iterable)
         },
