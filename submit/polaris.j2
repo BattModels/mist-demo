@@ -38,16 +38,17 @@ source ${PBS_O_WORKDIR}/activate
 # Set env variables
 {{- export_env( env ) }}
 
-# Logging
+# Setup job-specific TMPDIR
 echo "$(df -h /local/scratch)"
+export TMPDIR=/local/scratch
 
 # For applications that internally handle binding MPI/OpenMP processes to GPUs
+mpiexec \
+    {{- cliopts( mpiexe ) | indent }} \
 {%- if nsys is defined %}
 nsys profile \
       {{- cliopts( nsys ) | indent }} \
 {%- endif %}
-mpiexec \
-    {{- cliopts( mpiexe ) | indent }} \
     ${PBS_O_WORKDIR}/submit/set_node_rank \
     python3 train.py fit \
     {{- cliopts( train ) | indent }}

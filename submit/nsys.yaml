@@ -1,6 +1,7 @@
 nsys:
   trace: cuda,cudnn,cublas,nvtx
-  mpi-impl: mpich
+  stats: "true"
+  o: "nsys_multinode_%q{PMI_RANK}"
   sampling-period: 16000000
 train:
   trainer.fast_dev_run: 10
