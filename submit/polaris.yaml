@@ -2,11 +2,9 @@ queue: "prod"
 nodes: 16
 walltime: "3:00:00"
 mpiexe:
-  np: "${NRANKS}"
-  ppn: 1
-  depth: 64
-  cpu-bind: depth
-  hostfile: "${PBS_NODEFILE}"
+  np: $NGPUS
+  ppn: $NGPU_PER_HOST
+  hostfile: $PBS_NODEFILE
 train:
   data.path: /eagle/FoundEnergy/realspace_v2
 env:

@@ -79,12 +79,8 @@ def cli_main(args=None):
         LearningRateMonitor("step"),
     ]
 
-    num_nodes = int(os.environ.get("NRANKS", 1))
-    rank = int(os.environ.get("PMI_RANK", os.environ.get("GLOBAL_RANK", 0)))
-    os.environ["NODE_RANK"] = str(rank % num_nodes)
-    os.environ["GLOBAL_RANK"] = str(rank % num_nodes)
-
-    print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
+    num_nodes = int(os.environ.get("NNODES", 1))
+    rank = int(os.environ.get("PMI_RANK", None))
     if rank is not None and int(rank) != 0:
         logger = None
     else:
