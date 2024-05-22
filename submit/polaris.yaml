@@ -5,6 +5,7 @@ mpiexe:
   np: $NGPUS
   ppn: $NGPU_PER_HOST
   hostfile: $PBS_NODEFILE
+  cpu-bind: numa
 train:
   data.path: /eagle/FoundEnergy/realspace_v2
 env:
