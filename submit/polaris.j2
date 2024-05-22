@@ -42,6 +42,13 @@ source ${PBS_O_WORKDIR}/activate
 echo "$(df -h /local/scratch)"
 export TMPDIR=/local/scratch
 
+{%- if deepspeed is defined %}
+# Write out deepspeed config
+cat > $TMPDIR/deepspeed.json<<EOF
+{{ deepspeed | tojson(indent=4) }}
+EOF
+{%- endif %}
+
 # For applications that internally handle binding MPI/OpenMP processes to GPUs
 mpiexec \
     {{- cliopts( mpiexe ) | indent }} \
@@ -51,4 +58,6 @@ nsys profile \
 {%- endif %}
     ${PBS_O_WORKDIR}/submit/set_node_rank \
     python3 train.py fit \
-    {{- cliopts( train ) | indent }}
+    {{- cliopts( train ) | indent }}{%- if deepspeed is defined %}\
+    --deepspeed $TMPDIR/deepspeed.json
+    {%- endif %}

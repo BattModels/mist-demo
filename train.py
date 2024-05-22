@@ -7,6 +7,7 @@ from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.cli import LightningArgumentParser, LightningCLI
 from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.strategies import DeepSpeedStrategy
 
 from electrolyte_fm.data_modules import PropertyPredictionDataModule, RobertaDataSet
 from electrolyte_fm.models.lm_finetuning import LMFinetuning
@@ -45,6 +46,21 @@ class MyLightningCLI(LightningCLI):
         # Set model task_specs from the dataset's task_specs
         parser.link_arguments(
             "data.task_specs", "model.init_args.task_specs", apply_on="instantiate"
+        )
+
+        # Pass Deepspeed Config as JSON
+        parser.add_argument(
+            "--deepspeed",
+            type=str,
+            help="JSON formated DeepSpeed config",
+            default=None,
+        )
+
+        parser.link_arguments(
+            "deepspeed",
+            "trainer.strategy",
+            apply_on="parse",
+            compute_fn=lambda path: DeepSpeedStrategy(config=path),
         )
 
         # Configure tokenizer from checkpoint
