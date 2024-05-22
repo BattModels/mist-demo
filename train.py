@@ -55,20 +55,6 @@ class MyLightningCLI(LightningCLI):
             "data.task_specs", "model.init_args.task_specs", apply_on="instantiate"
         )
 
-        # Pass Deepspeed Config as JSON
-        parser.add_argument(
-            "--deepspeed",
-            help="JSON formated DeepSpeed config",
-            default=None,
-        )
-
-        parser.link_arguments(
-            "deepspeed",
-            "trainer.strategy",
-            apply_on="parse",
-            compute_fn=lambda path: DeepSpeedStrategy(config=path),
-        )
-
         # Configure tokenizer from checkpoint
         parser.link_arguments(
             "model.init_args.encoder_ckpt",

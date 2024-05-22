@@ -47,6 +47,7 @@ export TMPDIR=/local/scratch
 cat > $TMPDIR/deepspeed.json<<EOF
 {{ deepspeed | tojson(indent=4) }}
 EOF
+export PL_DEEPSPEED_CONFIG_PATH="$TMPDIR/deepspeed.json"
 {%- endif %}
 
 # Record configuration
@@ -67,6 +68,4 @@ nsys profile \
 {%- endif %}
     ${PBS_O_WORKDIR}/submit/set_node_rank \
     python3 train.py fit \
-    {{- cliopts( train ) | indent }}{%- if deepspeed is defined %}\
-    --deepspeed $TMPDIR/deepspeed.json
-    {%- endif %}
+    {{- cliopts( train ) | indent }}
