@@ -79,7 +79,7 @@ def cli_main(args=None):
         LearningRateMonitor("step"),
     ]
 
-    rank = int(os.environ.get("PMI_RANK", None))
+    rank = int(os.environ.get("PMI_RANK", 0))
     if rank is not None and int(rank) != 0:
         logger = None
     else:
