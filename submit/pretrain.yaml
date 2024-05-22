@@ -15,9 +15,6 @@ train:
   data.tokenizer: smirk
 
   # Optimizer Settings
-  model.optimizer: torch.optim.AdamW
-  model.optimizer.lr: 1.6e-4
-  model.optimizer.weight_decay: 0.01
   model.lr_schedule: electrolyte_fm.utils.lr_schedule.RelativeCosineWarmup
   model.lr_schedule.num_training_steps: 50_000
   model.lr_schedule.num_warmup_steps: beta2
@@ -27,3 +24,10 @@ train:
   trainer.max_steps: 10_000
   trainer.val_check_interval: 100
   trainer.precision: bf16-true
+
+deepspeed:
+  optimizer:
+    type: Adam
+    params:
+      lr: 0.00016
+      weight_decay: 0.01
