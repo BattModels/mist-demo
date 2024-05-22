@@ -51,7 +51,6 @@ class MyLightningCLI(LightningCLI):
         # Pass Deepspeed Config as JSON
         parser.add_argument(
             "--deepspeed",
-            type=str,
             help="JSON formated DeepSpeed config",
             default=None,
         )
