@@ -49,6 +49,15 @@ cat > $TMPDIR/deepspeed.json<<EOF
 EOF
 {%- endif %}
 
+# Record configuration
+echo "########################################"
+export JOB_CONFIG="$TMPDIR/config_${JOBID}.json"
+cat > $JOB_CONFIG<<EOF
+{{ __config__ | tojson(indent=4) }}
+EOF
+cat $JOB_CONFIG
+echo "########################################"
+
 # For applications that internally handle binding MPI/OpenMP processes to GPUs
 mpiexec \
     {{- cliopts( mpiexe ) | indent }} \
