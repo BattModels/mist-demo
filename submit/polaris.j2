@@ -31,7 +31,7 @@ export WORLD_SIZE=$NGPUS
 # Initialize environment
 module purge
 module use /soft/modulefiles/
-module --ignore_cache load conda/2024-04-29 gcc-native/12.3
+module --ignore_cache load conda/2024-04-29 gcc-native/12.3 PrgEnv-nvhpc
 export CC=gcc-12
 export CXX=g++-12
 conda activate base
