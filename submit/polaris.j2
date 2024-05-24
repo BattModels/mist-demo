@@ -50,16 +50,16 @@ cat > $TMPDIR/deepspeed.json<<EOF
 {{ deepspeed | tojson(indent=4) }}
 EOF
 export PL_DEEPSPEED_CONFIG_PATH="$TMPDIR/deepspeed.json"
-export DEEPSPEED_CONFIG=$(cat $PL_DEEPSPEED_CONFIG)
+export DEEPSPEED_CONFIG=$(cat $PL_DEEPSPEED_CONFIG_PATH)
 {%- endif %}
 
 # Record configuration
 echo "########################################"
 export JOB_CONFIG="$TMPDIR/config_${JOBID}.json"
-cat > $JOB_CONFIG<<EOF
+JOB_CONFIG='
 {{ __config__ | tojson(indent=4) }}
-EOF
-cat $JOB_CONFIG
+'
+echo "$JOB_CONFIG"
 echo "########################################"
 
 # For applications that internally handle binding MPI/OpenMP processes to GPUs

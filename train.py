@@ -23,10 +23,7 @@ class MyLightningCLI(LightningCLI):
 
     def before_fit(self):
         if logger := self.trainer.logger:
-            job_config = {}
-            if config_path := os.environ.get("JOB_CONFIG"):
-                with open(config_path, "r") as fid:
-                    job_config = json.load(fid)
+            job_config = json.loads(os.environ.get("JOB_CONFIG", "{}"))
 
             logger.log_hyperparams(
                 {
