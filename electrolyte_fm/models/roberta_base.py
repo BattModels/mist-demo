@@ -39,6 +39,8 @@ class RoBERTa(DeepSpeedMixin, LoggingMixin):
             attention_probs_dropout_prob=0.1,
             type_vocab_size=1,
         )
+
+    def configure_model(self):
         self.model = RobertaForMaskedLM(config=self.config)
 
     def get_encoder(self):
