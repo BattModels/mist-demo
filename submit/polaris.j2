@@ -50,6 +50,7 @@ cat > $TMPDIR/deepspeed.json<<EOF
 {{ deepspeed | tojson(indent=4) }}
 EOF
 export PL_DEEPSPEED_CONFIG_PATH="$TMPDIR/deepspeed.json"
+export DEEPSPEED_CONFIG=$(cat $PL_DEEPSPEED_CONFIG)
 {%- endif %}
 
 # Record configuration

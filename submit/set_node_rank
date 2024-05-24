@@ -1,3 +1,8 @@
 #!/bin/bash
+# Write Rank-specific Deepspeed config
+export PL_DEEPSPEED_CONFIG_PATH=${PL_DEEPSPEED_CONFIG_PATH}.${PMI_RANK}
+echo "$DEEPSPEED_CONFIG">$PL_DEEPSPEED_CONFIG_PATH
+
+# Set Node Rank from PMI Rank
 export NODE_RANK=$PMI_RANK
 $@
