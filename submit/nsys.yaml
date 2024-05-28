@@ -1,9 +1,11 @@
 nsys:
   trace: cuda,cudnn,cublas,nvtx
-  stats: "true"
   o: "nsys_multinode_%q{JOBID}_%q{PMI_RANK}"
   sampling-period: 16000000
-  sample: none # Disable CPU Profiling
+  # sample: none # Disable CPU Profiling
+
+  # Uncomment to profile GPU memory usage
+  # cuda-memory-usage: 'true'
 train:
   trainer.fast_dev_run: 10
   trainer.profiler: pytorch_lightning.profilers.PyTorchProfiler
