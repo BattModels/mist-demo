@@ -24,6 +24,7 @@ train:
   trainer.max_steps: 10_000
   trainer.val_check_interval: 100
   trainer.precision: bf16-true
+  trainer.enable_progress_bar: False
 
 env:
   TOKENIZERS_PARALLELISM: "true"
