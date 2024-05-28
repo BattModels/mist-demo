@@ -25,6 +25,9 @@ train:
   trainer.val_check_interval: 100
   trainer.precision: bf16-true
 
+env:
+  TOKENIZERS_PARALLELISM: "true"
+
 deepspeed:
   optimizer:
     type: Adam
