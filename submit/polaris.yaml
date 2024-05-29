@@ -11,7 +11,6 @@ train:
 env:
   # NCCL Setting
   NCCL_DEBUG: WARN
-  NCCL_NET_GDR_LEVEL: PHB
   NCCL_COLLNET_ENABLE: 1
 
   # MPICH Error iff enabled: issue #30
