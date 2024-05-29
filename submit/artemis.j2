@@ -46,10 +46,10 @@ echo "$JOB_CONFIG"
 echo "########################################"
 
 srun --mpi=pmix \
+${PWD}/submit/set_node_rank \
 {%- if nsys is defined %}
 nsys profile \
       {{- cliopts( nsys ) | indent }} \
 {%- endif %}
-    ${PWD}/submit/set_node_rank \
     python3 train.py fit \
     {{- cliopts( train ) | indent }}
