@@ -1,6 +1,6 @@
 nsys:
   trace: cuda,cudnn,cublas,nvtx
-  o: "nsys_multinode_%q{JOBID}_%q{PMI_RANK}"
+  o: "nsys_multinode_%q{JOBID}_%q{NODE_RANK}"
   sampling-period: 16000000
   # sample: none # Disable CPU Profiling
 
