@@ -35,3 +35,12 @@ deepspeed:
     params:
       lr: 0.00016
       weight_decay: 0.01
+
+  zero_optimization:
+    stage: 3
+    offload_optimizer:
+      device: cpu
+    offload_param:
+      device: cpu
+    contiguous_gradients: true
+    overlap_comm: true
