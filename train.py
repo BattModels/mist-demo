@@ -8,7 +8,6 @@ from pytorch_lightning import seed_everything
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.cli import LightningArgumentParser, LightningCLI
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.strategies import DeepSpeedStrategy
 
 from electrolyte_fm.data_modules import PropertyPredictionDataModule, RobertaDataSet
 from electrolyte_fm.models.lm_finetuning import LMFinetuning
