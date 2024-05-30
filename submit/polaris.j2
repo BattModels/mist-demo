@@ -55,7 +55,6 @@ export DEEPSPEED_CONFIG=$(cat $PL_DEEPSPEED_CONFIG_PATH)
 
 # Record configuration
 echo "########################################"
-export JOB_CONFIG="$TMPDIR/config_${JOBID}.json"
 JOB_CONFIG='
 {{ __config__ | tojson(indent=4) }}
 '
