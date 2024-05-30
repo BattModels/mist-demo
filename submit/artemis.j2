@@ -1,6 +1,6 @@
 #!/bin/bash
 {%- from "./utils.j2" import cliopts, export_env %}
-#SBATCH -p {{ queue or venkvis-debug }}
+#SBATCH -p {{ queue or "venkvis-debug" }}
 #SBATCH --nodes {{ nodes or 1 }}
 #SBATCH --ntasks-per-node {{ gpus_per_node or 2 }}
 #SBATCH --gpus-per-node {{ gpus_per_node or 2 }}
@@ -8,6 +8,9 @@
 #SBATCH --cpus-per-task 16
 #SBATCH --mem-per-cpu 2G
 #SBATCH --gpu_cmode=shared
+{%- if resubmit %}
+#SBATCH --signal=SIGUSR1@90
+{%- endif %}
 
 # Training script for h001
 my_job_header
