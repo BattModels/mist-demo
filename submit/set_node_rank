@@ -4,8 +4,10 @@
 # Set Node Rank from PMI Rank (Fallback to PMIX Rank)
 export NODE_RANK=${PMI_RANK:-$PMIX_RANK}
 
-# Write Rank-specific Deepspeed config
-export PL_DEEPSPEED_CONFIG_PATH=${PL_DEEPSPEED_CONFIG_PATH}.${NODE_RANK}
-echo "$DEEPSPEED_CONFIG">$PL_DEEPSPEED_CONFIG_PATH
+# Write Rank-specific Deepspeed config, if set
+if ! [[ -z "$PL_DEEPSPEED_CONFIG_PATH" ]]; then
+    export PL_DEEPSPEED_CONFIG_PATH=${PL_DEEPSPEED_CONFIG_PATH}.${NODE_RANK}
+    echo "$DEEPSPEED_CONFIG">$PL_DEEPSPEED_CONFIG_PATH
+fi
 
 $@
