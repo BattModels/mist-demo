@@ -126,6 +126,5 @@ class SaveConfigWithCkpts(Callback):
             tokenizer = config["tokenizer"]
         except:
             tokenizer = config["init_args"]["tokenizer"]
-                                      
         print(f"tokenizer: {tokenizer}")
         return tokenizer
