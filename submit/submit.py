@@ -6,7 +6,7 @@ from __future__ import annotations
 import fcntl
 import json
 import os
-import shlex
+from shlex import quote
 import sys
 from copy import deepcopy
 from pathlib import Path
@@ -44,6 +44,8 @@ def merge_config(a: dict, b: dict):
         return b
     result = deepcopy(a)
     for k, v in b.items():
+        if isinstance(b, list):
+            b = quote(b)
         if k.endswith(":"):
             result[k[:-1]] = b[k]
         elif k in result and isinstance(v, dict):
@@ -136,6 +138,7 @@ def compose(
 
     # Overlay cli json
     config = merge_config(config, json.loads(json_config))
+    # config = dict((k, quote(v)) for k,v in config.items()) 
     config["__config__"] = deepcopy(config)
 
     # Generate Script
