@@ -138,7 +138,6 @@ def compose(
 
     # Overlay cli json
     config = merge_config(config, json.loads(json_config))
-    # config = dict((k, quote(v)) for k,v in config.items()) 
     config["__config__"] = deepcopy(config)
 
     # Generate Script
