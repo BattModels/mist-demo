@@ -6,10 +6,10 @@ from __future__ import annotations
 import fcntl
 import json
 import os
-from shlex import quote
 import sys
 from copy import deepcopy
 from pathlib import Path
+from shlex import quote
 from typing import List
 
 import jinja2
