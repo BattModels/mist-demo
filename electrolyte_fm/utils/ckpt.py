@@ -123,8 +123,8 @@ class SaveConfigWithCkpts(Callback):
         with open(config_path, "r") as fid:
             config = json.load(fid)
         try:
-            tokenizer = config["tokenizer"]
+            tokenizer = config["data"]["tokenizer"]
         except:
-            tokenizer = config["init_args"]["tokenizer"]
+            tokenizer = config["data"]["init_args"]["tokenizer"]
         print(f"tokenizer: {tokenizer}")
         return tokenizer
