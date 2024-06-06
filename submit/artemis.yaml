@@ -4,6 +4,6 @@ train:
   data.path: /nfs/turbo/coe-venkvis/mist/realspace_v3_dev/
   trainer.devices: $SLURM_GPUS_PER_NODE
   trainer.num_nodes: $SLURM_NNODES
-  data.num_workers: $SLURM_CPUS_PER_TASK
 env:
-  NNODES: $SLURM_NNODES
+  # Helper for consistent JOBIDs
+  JOBID: $SLURM_JOB_ID

@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import timedelta
 
@@ -21,8 +22,11 @@ class MyLightningCLI(LightningCLI):
 
     def before_fit(self):
         if logger := self.trainer.logger:
+            job_config = json.loads(os.environ.get("JOB_CONFIG", "{}"))
+
             logger.log_hyperparams(
                 {
+                    "job_config": job_config,
                     "n_gpus_per_node": self.trainer.num_devices,
                     "n_nodes": self.trainer.num_nodes,
                     "world_size": self.trainer.world_size,
@@ -79,12 +83,7 @@ def cli_main(args=None):
         LearningRateMonitor("step"),
     ]
 
-    num_nodes = int(os.environ.get("NRANKS", 1))
-    rank = int(os.environ.get("PMI_RANK", os.environ.get("GLOBAL_RANK", 0)))
-    os.environ["NODE_RANK"] = str(rank % num_nodes)
-    os.environ["GLOBAL_RANK"] = str(rank % num_nodes)
-
-    print(f"PY: NUM_NODES: {num_nodes} PMI_RANK: {rank} PID {os.getpid()}")
+    rank = int(os.environ.get("MIST_PID_RANK", 0))
     if rank is not None and int(rank) != 0:
         logger = None
     else:
@@ -97,8 +96,6 @@ def cli_main(args=None):
             "callbacks": callbacks,
             "logger": logger,
             "precision": "16-mixed",
-            "devices": -1,
-            "num_nodes": num_nodes or 1,
             "strategy": "deepspeed",
             "use_distributed_sampler": False,  # Handled by DataModule (Needed as Iterable)
         },

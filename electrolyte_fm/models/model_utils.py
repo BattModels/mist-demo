@@ -22,7 +22,7 @@ class DeepSpeedMixin:
         #
 
     def get_encoder(self):
-        raise NotImplmentedError
+        raise NotImplementedError
 
 
 class LoggingMixin(pl.LightningModule):

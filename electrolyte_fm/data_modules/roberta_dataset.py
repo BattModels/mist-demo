@@ -17,8 +17,9 @@ class RobertaDataSet(pl.LightningDataModule):
         mlm_probability=0.15,
         batch_size: int = 64,
         val_batch_size=None,
-        num_workers=1,
-        prefetch_factor=4,
+        num_workers=0,
+        prefetch_factor=None,
+        persistent_workers=False,
     ):
         super().__init__()
 
@@ -33,6 +34,7 @@ class RobertaDataSet(pl.LightningDataModule):
         self.val_batch_size = val_batch_size if val_batch_size else batch_size
         self.num_workers = num_workers
         self.prefetch_factor = prefetch_factor
+        self.persistent_workers = persistent_workers
         self.save_hyperparameters()
 
     def prepare_data(self):
@@ -97,7 +99,7 @@ class RobertaDataSet(pl.LightningDataModule):
             num_workers=self.num_workers,
             prefetch_factor=self.prefetch_factor,
             pin_memory=True,
-            persistent_workers=True,
+            persistent_workers=self.persistent_workers,
         )
 
     def val_dataloader(self):
@@ -108,7 +110,7 @@ class RobertaDataSet(pl.LightningDataModule):
             num_workers=self.num_workers,
             prefetch_factor=self.prefetch_factor,
             pin_memory=True,
-            persistent_workers=True,
+            persistent_workers=self.persistent_workers,
             shuffle=False,
         )
 

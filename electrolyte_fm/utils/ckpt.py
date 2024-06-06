@@ -104,7 +104,7 @@ class SaveConfigWithCkpts(Callback):
         ).__getattribute__(import_path[-1])
         assert cls_name == f"{model_cls.__module__}.{model_cls.__name__}"
         model = model_cls(**model_config)
-
+        model.configure_model()
         # Load model weights from the checkpoint
         from deepspeed.utils.zero_to_fp32 import (
             get_fp32_state_dict_from_zero_checkpoint,
@@ -116,12 +116,15 @@ class SaveConfigWithCkpts(Callback):
 
     @staticmethod
     def get_ckpt_tokenizer(path: str | Path):
-        print(f"loadding tokenizer from {path}")
+        print(f"loading tokenizer from {path}")
         path = Path(path)
         config_path = path.parent.parent.joinpath("config.json")
         assert config_path.is_file()
         with open(config_path, "r") as fid:
             config = json.load(fid)
-
-        print(f"tokenizer: {config['data']['tokenizer']}")
-        return config["data"]["tokenizer"]
+        try:
+            tokenizer = config["data"]["tokenizer"]
+        except:
+            tokenizer = config["data"]["init_args"]["tokenizer"]
+        print(f"tokenizer: {tokenizer}")
+        return tokenizer

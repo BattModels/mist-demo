@@ -6,10 +6,10 @@ from __future__ import annotations
 import fcntl
 import json
 import os
-import shlex
 import sys
 from copy import deepcopy
 from pathlib import Path
+from shlex import quote
 from typing import List
 
 import jinja2
@@ -44,6 +44,8 @@ def merge_config(a: dict, b: dict):
         return b
     result = deepcopy(a)
     for k, v in b.items():
+        if isinstance(b, list):
+            b = quote(b)
         if k.endswith(":"):
             result[k[:-1]] = b[k]
         elif k in result and isinstance(v, dict):
@@ -88,7 +90,7 @@ def compose(
         help="Additional configuration to apply last",
     ),
     default: bool = typer.Option(
-        False,
+        True,
         help="Use the default.yaml file next to the template",
     ),
     script_config: bool = typer.Option(
@@ -136,6 +138,7 @@ def compose(
 
     # Overlay cli json
     config = merge_config(config, json.loads(json_config))
+    config["__config__"] = deepcopy(config)
 
     # Generate Script
     script = template.render(config)
