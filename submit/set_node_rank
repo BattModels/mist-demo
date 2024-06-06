@@ -1,8 +1,14 @@
 #!/bin/bash
 # Perform rank-specific configuration
 
-# Set Node Rank from PMI Rank (Fallback to PMIX Rank)
-export NODE_RANK=${PMI_RANK:-$PMIX_RANK}
+# Set MIST_PID_RANK
+# This is the Global index of each python process involved
+# in training MIST
+export MIST_PID_RANK=${PMI_RANK:-$PMIX_RANK}
+echo "Starting $MIST_PID_RANK of $WORLD_SIZE"
+
+# Set Node Rank for Lightning
+export NODE_RANK=$MIST_PID_RANK
 
 # Write Rank-specific Deepspeed config, if set
 if ! [[ -z "$PL_DEEPSPEED_CONFIG_PATH" ]]; then
