@@ -11,16 +11,7 @@ class DeepSpeedMixin:
     def load(checkpoint_dir, **kwargs):
         print(checkpoint_dir)
         return SaveConfigWithCkpts.load(checkpoint_dir, **kwargs)
-
-        # config_path = config_path or Path(checkpoint_dir).parent.parent.joinpath(
-        #     "config.json"
-        # )
-        # with open("config_path", "r") as fid:
-        #     config = json.load(fid)
-        #
-        # cls.load(checkpoint_dir, config_path)
-        #
-
+    
     def get_encoder(self):
         raise NotImplementedError
 
