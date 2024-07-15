@@ -23,18 +23,27 @@ python -m pipx ensurepath
 python -m pipx install --python $(which python) poetry
 ```
 
-3. Install environment: `poetry install`
-
-4. Install `ipykernel` and add a kernel for the environment.
+3. Install environment:
 ```shell
-pip install ipykernel
+cd mist
+poetry install
+```
+
+5. Install `ipykernel` and add a kernel for the environment.
+```shell
+source ./activate
+python -m pip install ipykernel
 python -m ipykernel install --user --name mist_demo
 ```
 
 ## Using the notebooks
 
 The notebooks demonstrating the MIST pre-training workflow are in the `notebooks` directory. To run them:
-1. Activate the environment
+1. Request an interactive session with one GPU node.
+```
+qsub -I -l select=1 -l filesystems=[home:filesystem] -l walltime=01:00:00 -q debug -A [AccountName]
+```
+2. Activate the environment
 ```shell
 # Instructions for Polaris
 module purge
@@ -42,12 +51,8 @@ module use /soft/modulefiles/
 module --ignore_cache load conda/2024-04-29 gcc-native/12.3 PrgEnv-nvhpc
 export CC=gcc-12
 export CXX=g++-12
-conda activate base
-source ./mist/activate
-```
-2. Request an interactive session with one GPU node.
-```
-qsub -I -l select=1 -l filesystems=[home:filesystem] -l walltime=01:00:00 -q debug -A [AccountName]
+cd mist
+source ./activate
 ```
 4. Launch a `jupyter notebook`  server and select the `mist_env` kernel.
 ```
