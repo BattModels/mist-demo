@@ -1,4 +1,4 @@
-# Pre-training MIST (Molecular Insight Transformer)
+# Pre-training MIST (Molecular Insight SMILES Transformer)
 This repository is an example of the pre-training workflow for a transformer trained on molecular datasets.
 
 # Installation
