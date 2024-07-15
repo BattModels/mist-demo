@@ -1,4 +1,4 @@
-from electrolyte_fm.utils.lr_schedule import _get_cosine_relative_decay_with_warmup
+from mist.utils.lr_schedule import _get_cosine_relative_decay_with_warmup
 
 
 def test_cosine_rel():
