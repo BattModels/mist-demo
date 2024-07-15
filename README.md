@@ -34,7 +34,7 @@ python -m ipykernel install --user --name mist_demo
 ## Using the notebooks
 
 The notebooks demonstrating the MIST pre-training workflow are in the `notebooks` directory. To run them:
-1. Activate the enviroment
+1. Activate the environment
 ```shell
 # On Polaris
 # Initialize environment
