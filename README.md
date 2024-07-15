@@ -49,3 +49,7 @@ sample_data
 
 The data is pre-shuffled and split into training, validation and test sets with a 80:20:20 ratio. 
 The training dataset has `~0.25B` molecules, while the test and validation sets have `62M` molecules each.
+
+## Checkpoint
+
+A sample checkpoint is also available on Dropbox. This data should be downloaded and placed in the `sample_checkpoint` folder.

@@ -1,8 +1,10 @@
 [tool.poetry]
-name = "mist"
+name = "mist_demo"
 version = "0.1.0"
 description = ""
 readme = "README.md"
+authors = ["Your Name <you@example.com>"]
+
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -17,10 +19,10 @@ h5py = "^3.11"
 protobuf = "<=3.20"
 datasets = "^2.19"
 pyspark = "^3.5.0"
-smirk = {path = "smirk", develop=true}
 rich = "^13"
 pydoe2 = "^1.3"
 smilespe = "^0.0.3"
+scikit-learn = "^1.5.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8"
