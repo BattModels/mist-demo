@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "mist_demo"
+name = "mist"
 version = "0.1.0"
 description = ""
 readme = "README.md"
