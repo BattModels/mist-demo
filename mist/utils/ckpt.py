@@ -5,7 +5,6 @@ from pathlib import Path
 
 from jsonargparse import Namespace
 from pytorch_lightning import Callback, LightningModule, Trainer
-from pytorch_lightning.cli import LightningArgumentParser
 
 
 class SaveConfigWithCkpts(Callback):
@@ -21,59 +20,17 @@ class SaveConfigWithCkpts(Callback):
         - Added "class_path" field
         - Moved model hparams to "init_args" field
     """
-
+    
     def __init__(
         self,
-        parser: LightningArgumentParser,
         config: Namespace,
         overwrite: bool = True,
     ) -> None:
-        self.parser = parser
         self.config = config
         self.overwrite = overwrite
         self.already_saved = False
         self.config_path = None
-
-    def setup(self, trainer: Trainer, pl_module: LightningModule, stage: str) -> None:
-        if self.already_saved:
-            return
-
-        log_dir = trainer.log_dir or Path.cwd()
-        if logger := trainer.logger:
-            config_path = Path(log_dir, str(logger.name), str(logger.version))
-        else:
-            config_path = Path(log_dir)
-        self.config_path = config_path
-
-        if trainer.is_global_zero:
-            config_path.mkdir(parents=True, exist_ok=True)
-            config_json = self.parser.dump(
-                self.config,
-                skip_none=False,
-                skip_check=True,
-                skip_link_targets=False,
-                format="json",
-            )
-            with open(Path(config_path, "config.json"), "w") as config_file:
-                config_file.write(config_json)
-
-            # Save model hyperparameters
-            with open(Path(config_path, "model_hparams.json"), "w") as fid:
-                model_cls = trainer.lightning_module.__class__
-                model_config = {
-                    "version": "0.2.0",
-                    "class_path": f"{model_cls.__module__}.{model_cls.__name__}",
-                    "init_args": trainer.lightning_module.hparams,
-                }
-                json.dump(model_config, fid, default=lambda x: str(type(x)))
-
-            # Save Environment
-            with open(Path(config_path, "env.json"), "w") as fid:
-                json.dump(dict(os.environ), fid, sort_keys=True)
-
-            if logger := trainer.logger:
-                logger.log_hyperparams({"cli": self.config.as_dict()})
-
+        
     @staticmethod
     def load(checkpoint_dir: str | Path, config_path=None) -> LightningModule:
         """Restore from a deepspeed checkpoint, mainly used for downstream tasks"""

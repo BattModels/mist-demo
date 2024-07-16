@@ -1,5 +1,5 @@
 import torch
-from pytorch_lightning.cli import LRSchedulerCallable, OptimizerCallable
+from typing import Callable
 from pytorch_lightning.loggers import WandbLogger
 from transformers import RobertaConfig, RobertaForMaskedLM
 
@@ -19,8 +19,8 @@ class RoBERTa(DeepSpeedMixin, LoggingMixin):
         num_attention_heads: int = 12,
         num_hidden_layers: int = 6,
         hidden_size: int = 768,
-        optimizer: OptimizerCallable = torch.optim.AdamW,
-        lr_schedule: LRSchedulerCallable | None = None,
+        optimizer: Callable = torch.optim.AdamW,
+        lr_schedule: Callable | None = None,
     ) -> None:
         super().__init__()
         self.optimizer = optimizer
@@ -115,4 +115,5 @@ class RoBERTa(DeepSpeedMixin, LoggingMixin):
                 "optimizer": optimizer,
                 "lr_scheduler": {"scheduler": schedule(optimizer), "interval": "step"},
             }
+
         return optimizer

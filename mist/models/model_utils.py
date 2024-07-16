@@ -11,7 +11,7 @@ class DeepSpeedMixin:
     def load(checkpoint_dir, **kwargs):
         print(checkpoint_dir)
         return SaveConfigWithCkpts.load(checkpoint_dir, **kwargs)
-    
+
     def get_encoder(self):
         raise NotImplementedError
 
@@ -28,3 +28,4 @@ class LoggingMixin(pl.LightningModule):
             sync_dist=True,
         )
         return super().on_train_epoch_start()
+
