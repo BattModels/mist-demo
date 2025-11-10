@@ -1,29 +1,31 @@
 [project]
-name = "mist"
+name = "mist_demo"
 version = "0.1.0"
-description = "Walkthrough of pre-training MIST (Molecular Insight SMILES Transformer)"
+description = "Evaluating and Finetuning MIST (Molecular Insight SMILES Transformer) models."
 authors = [
     { name = "Anoushka Bhutani", email = "abhutani@umich.edu" },
     { name = "Alexius Wadell", email = "awadell@umich.edu" },
 ]
-requires-python = "~=3.11"
 readme = "README.md"
+requires-python = ">=3.10,<3.14"
 dependencies = [
-    "numpy<2.0.0",
-    "torch~=2.3",
-    "torchvision>=0.18.0,<0.19",
-    "lightning~=2.2",
-    "jsonargparse[signatures]~=4.27",
-    "transformers~=4.40",
-    "wandb>=0.16,<0.17",
-    "typer>=0.9,<0.10",
-    "h5py~=3.11",
-    "protobuf<=3.20",
-    "datasets~=2.19",
-    "pyspark>=3.5.0,<4",
-    "rich>=13,<14",
-    "pydoe2~=1.3",
-    "smilespe>=0.0.3,<0.0.4",
+    "torch~=2.6",
+    "torchmetrics~=1.7",
+    "lightning~=2.5",
+    "jsonargparse[signatures,jsonnet]>=4.27",
+    "transformers>=4.40",
+    "deepspeed @ git+https://github.com/microsoft/DeepSpeed.git@v0.16.4",
+    "wandb>=0.16",
+    "typer>=0.9",
+    "datasets>=2.20",
+    "rich>=13",
+    "jsonnet>=0.21.0",
+    "rdkit>=2024.3.5",
+    "smirk",
+    "safetensors>=0.5.1",
+    "pytorch-lightning~=2.5",
+    "pandas>=2.2.3",
+    "numpy>=2.2.4",
 ]
 
 [dependency-groups]
@@ -32,13 +34,19 @@ dev = [
     "pre-commit~=3.7",
 ]
 
+docs = [
+    "furo==2024.8.6",
+    "jupyter~=1.1",
+    "myst-nb~=1.2.0",
+    "sphinx~=7.4",
+    "sphinx-argparse==0.4.0",
+    "sphinx-autobuild==2024.10.3",
+    "sphinx-copybutton==0.5.2",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["test"]
 addopts = "--color yes"
 
 [tool.isort]
 profile = "black"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
