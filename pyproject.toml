@@ -7,14 +7,11 @@ authors = [
     { name = "Alexius Wadell", email = "awadell@umich.edu" },
 ]
 readme = "README.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.10,<3.13"
 dependencies = [
     "torch~=2.6",
     "torchmetrics~=1.7",
     "lightning~=2.5",
-    "jsonargparse[signatures,jsonnet]>=4.27",
-    "transformers>=4.40",
-    "deepspeed @ git+https://github.com/microsoft/DeepSpeed.git@v0.16.4",
     "wandb>=0.16",
     "typer>=0.9",
     "datasets>=2.20",
@@ -26,27 +23,9 @@ dependencies = [
     "pytorch-lightning~=2.5",
     "pandas>=2.2.3",
     "numpy>=2.2.4",
+    "notebook>=7.4.7",
+    "peft==0.17.0",
+    "plotly>=6.5.0",
+    "optuna>=4.6.0",
+    "scikit-learn>=1.5.1",
 ]
-
-[dependency-groups]
-dev = [
-    "pytest>=8,<9",
-    "pre-commit~=3.7",
-]
-
-docs = [
-    "furo==2024.8.6",
-    "jupyter~=1.1",
-    "myst-nb~=1.2.0",
-    "sphinx~=7.4",
-    "sphinx-argparse==0.4.0",
-    "sphinx-autobuild==2024.10.3",
-    "sphinx-copybutton==0.5.2",
-]
-
-[tool.pytest.ini_options]
-testpaths = ["test"]
-addopts = "--color yes"
-
-[tool.isort]
-profile = "black"
