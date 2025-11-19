@@ -13,7 +13,7 @@ Complete fine-tuning workflow for MIST encoder models:
 - Training on the QM9 dataset for molecular property prediction
 - Model evaluation 
 
-#### [tutorials/molecular_property_prediction.ipynb](tutorials/molecular_property_prediction.ipynb)
+#### [molecular_property_prediction.ipynb](tutorials/molecular_property_prediction.ipynb)
 Inference demonstrations using fine-tuned MIST models:
 - Loading pretrained MIST checkpoints from HuggingFace
 - Predicting boiling point, flash point, and melting point
