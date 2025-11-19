@@ -8,8 +8,8 @@ The full code, including pre-training, model development and full scale applicat
 
 #### [run_finetuning.ipynb](tutorials/run_finetuning.ipynb)
 Complete fine-tuning workflow for MIST encoder models:
-- Finetuning with **LoRA** (Low-Rank Adaptation) for parameter-efficient training
-- Hyperparameter optimization
+- Finetuning with LoRA (Low-Rank Adaptation) for parameter-efficient training
+- Hyperparameter optimization for task network
 - Training on the QM9 dataset for molecular property prediction
 - Model evaluation 
 
