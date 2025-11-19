@@ -1,89 +1,44 @@
-# Pre-training MIST (Molecular Insight SMILES Transformer)
-This repository is an example of the pre-training workflow for a transformer trained on molecular datasets.
+# MIST Demo
 
-# Installation
+This repository contains tutorials for fine-tuning and applying MIST (Molecular Insight SMILES Transformer) foundation models to chemical problems. 
+Model checkpoints for MIST models are available on [HuggingFace](https://huggingface.co/mist-models) and on Zenodo.
+The full code, including pre-training, model development and full scale application demos can be found in the [`mist`](https://github.com/BattModels/mist-demo) repository.
 
-MIST is trained primarily on Polaris, installation instructions for this system are provided here. 
-Installation may be slightly different for other systems.
+# Tutorials
 
-## Polaris
+#### [run_finetuning.ipynb](tutorials/run_finetuning.ipynb)
+Complete fine-tuning workflow for MIST encoder models:
+- Finetuning with **LoRA** (Low-Rank Adaptation) for parameter-efficient training
+- Hyperparameter optimization
+- Training on the QM9 dataset for molecular property prediction
+- Model evaluation 
 
-1. Load conda
-```shell
-module purge
-module use /soft/modulefiles/
-module --ignore_cache load conda/2024-04-29
-conda activate base
+#### [tutorials/molecular_property_prediction.ipynb](tutorials/molecular_property_prediction.ipynb)
+Inference demonstrations using fine-tuned MIST models:
+- Loading pretrained MIST checkpoints from HuggingFace
+- Predicting boiling point, flash point, and melting point
+- Analyzing property trends for alkenes and alcohols
+
+## Installation
+
+### Local Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd mist-demo
 ```
 
-2. Install poetry + pipx
-```shell
-python -m pip install pipx
-python -m pipx ensurepath
-python -m pipx install --python $(which python) poetry
+2. Create a virtual environment and install dependencies using [uv](https://docs.astral.sh/uv/getting-started/installation/)
+```bash
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv sync
 ```
 
-3. Install environment:
-```shell
-cd mist
-poetry install
-```
+### Running the Notebooks
 
-5. Install `ipykernel` and add a kernel for the environment.
-```shell
-source ./activate
-python -m pip install ipykernel
-python -m ipykernel install --user --name mist_demo
+Launch Jupyter and open any notebook in `mist-demo/tutorials`:
+```bash
+jupyter notebook
 ```
-
-## Using the notebooks
-
-The notebooks demonstrating the MIST pre-training workflow are in the `notebooks` directory. To run them:
-1. Request an interactive session with one GPU node.
-```
-qsub -I -l select=1 -l filesystems=[home:filesystem] -l walltime=01:00:00 -q debug -A [AccountName]
-```
-2. Activate the environment
-```shell
-# Instructions for Polaris
-module purge
-module use /soft/modulefiles/
-module --ignore_cache load conda/2024-04-29 gcc-native/12.3 PrgEnv-nvhpc
-export CC=gcc-12
-export CXX=g++-12
-cd mist
-source ./activate
-```
-4. Launch a `jupyter notebook`  server and select the `mist_env` kernel.
-```
-jupyter notebook --ip $(hostname) --no-browser
-```
-
-## Data
-
-The pre-training data is available on [Dropbox](https://www.dropbox.com/scl/fo/3z1lklbper07ojtp5t4iu/AHUEJ_3j5_CRVpWmcGLW3kQ?rlkey=2818imymvf5mk5byz0c7ei1ij&dl=0).
-This data should be downloaded and extracted in the `sample_data` folder. It requires ~2.2GB of disk space.
-
-```
-sample_data
-├── data
-│   ├── train
-│   │   ├── xaaa.txt
-│   │   ├── xaab.txt
-│   │   ├── ...
-│   ├── test
-│   │   ├── xaaa.txt
-│   │   ├── xaab.txt
-│   │   ├── ...
-│   ├── val
-│   │   ├── xaaa.txt
-│   │   ├── xaab.txt
-│   │   ├── ...
-```
-
-The data is pre-shuffled and split into training, validation and test sets with a 80:20:20 ratio. 
-The training dataset has `~0.25B` molecules, while the test and validation sets have `62M` molecules each.
-
-## Checkpoint
-
-A sample checkpoint is also available on Dropbox. This data should be downloaded and placed in the `sample_checkpoint` folder.
