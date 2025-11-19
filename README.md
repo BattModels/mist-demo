@@ -4,7 +4,7 @@ This repository contains tutorials for fine-tuning and applying MIST (Molecular 
 Model checkpoints for MIST models are available on [HuggingFace](https://huggingface.co/mist-models) and on Zenodo.
 The full code, including pre-training, model development and full scale application demos can be found in the [`mist`](https://github.com/BattModels/mist-demo) repository.
 
-# Tutorials
+## Tutorials
 
 #### [run_finetuning.ipynb](tutorials/run_finetuning.ipynb)
 Complete fine-tuning workflow for MIST encoder models:
