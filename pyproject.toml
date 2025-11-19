@@ -29,3 +29,6 @@ dependencies = [
     "optuna>=4.6.0",
     "scikit-learn>=1.5.1",
 ]
+
+[tool.setuptools.packages.find]
+include = ["mist_demo*"]
