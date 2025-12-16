@@ -31,9 +31,8 @@ cd mist-demo
 
 2. Create a virtual environment and install dependencies using [uv](https://docs.astral.sh/uv/getting-started/installation/)
 ```bash
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv sync
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
 ### Running the Notebooks
