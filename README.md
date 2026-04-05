@@ -1,5 +1,9 @@
 # MIST Demo
 
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/github/license/BattModels/mist-demo)](LICENSE)
+
+
 This repository contains tutorials for fine-tuning and applying MIST (Molecular Insight SMILES Transformer) foundation models to chemical problems. 
 Model checkpoints for MIST models are available on [HuggingFace](https://huggingface.co/mist-models) and on Zenodo.
 The full code, including pre-training, model development and full scale application demos can be found in the [`mist`](https://github.com/BattModels/mist-demo) repository.
