@@ -41,3 +41,18 @@ Launch Jupyter and open any notebook in `mist-demo/tutorials`:
 ```bash
 jupyter notebook
 ```
+
+## Cite
+If you use the MIST models in your work please cite:
+
+```
+@online{MIST,
+  title = {Foundation Models for Discovery and Exploration in Chemical Space},
+  author = {Wadell, Alexius and Bhutani, Anoushka and Azumah, Victor and Ellis-Mohr, Austin R. and Kelly, Celia and Zhao, Hancheng and Nayak, Anuj K. and Hegazy, Kareem and Brace, Alexander and Lin, Hongyi and Emani, Murali and Vishwanath, Venkatram and Gering, Kevin and Alkan, Melisa and Gibbs, Tom and Wells, Jack and Varshney, Lav R. and Ramsundar, Bharath and Duraisamy, Karthik and Mahoney, Michael W. and Ramanathan, Arvind and Viswanathan, Venkatasubramanian},
+  date = {2025-10-20},
+  eprint = {2510.18900},
+  eprinttype = {arXiv},
+  eprintclass = {physics},
+  doi = {10.48550/arXiv.2510.18900},
+  url = {http://arxiv.org/abs/2510.18900},  
+```
