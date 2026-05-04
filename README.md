@@ -1,8 +1,8 @@
 # MIST Demo
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/github/license/BattModels/mist-demo)](LICENSE)
-
+<a href="https://arxiv.org/abs/2510.18900">![arXiv:2409.15370](https://img.shields.io/badge/cs.LG-2409.15370-b31b1b?style=flat&amp;logo=arxiv&amp;logoColor=red)</a>
+[![Model on HF](https://huggingface.co/datasets/huggingface/badges/resolve/main/model-on-hf-sm.svg)](https://huggingface.co/mist-models)
 
 This repository contains tutorials for fine-tuning and applying MIST (Molecular Insight SMILES Transformer) foundation models to chemical problems. 
 Model checkpoints for MIST models are available on [HuggingFace](https://huggingface.co/mist-models) and on Zenodo.
@@ -10,18 +10,25 @@ The full code, including pre-training, model development and full scale applicat
 
 ## Tutorials
 
-#### [run_finetuning.ipynb](tutorials/run_finetuning.ipynb)
+#### [Molecular Property Prediction](tutorials/molecular_property_prediction.ipynb)
+Inference demonstrations using fine-tuned MIST models:
+- Loading pretrained MIST checkpoints from HuggingFace
+- Predicting boiling point, flash point, and melting point
+- Analyzing property trends for alkenes and alcohols
+
+#### [Run Finetuning](tutorials/run_finetuning.ipynb)
 Complete fine-tuning workflow for MIST encoder models:
 - Finetuning with LoRA (Low-Rank Adaptation) for parameter-efficient training
 - Hyperparameter optimization for task network
 - Training on the QM9 dataset for molecular property prediction
 - Model evaluation 
 
-#### [molecular_property_prediction.ipynb](tutorials/molecular_property_prediction.ipynb)
-Inference demonstrations using fine-tuned MIST models:
-- Loading pretrained MIST checkpoints from HuggingFace
-- Predicting boiling point, flash point, and melting point
-- Analyzing property trends for alkenes and alcohols
+#### [Olfaction Prediction](tutorials/olfaction_prediction.ipynb)
+Exploring how molecules smell with the MIST olfaction model:
+- Generating the scent profile for a molecule
+- Modeling discontinuities in the structure-perception mapping
+
+
 
 ## Installation
 
