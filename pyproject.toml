@@ -7,7 +7,7 @@ authors = [
     { name = "Alexius Wadell", email = "awadell@umich.edu" },
 ]
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10,<3.14"
 dependencies = [
     "torch~=2.6",
     "torchmetrics~=1.7",
